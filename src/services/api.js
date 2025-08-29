@@ -37,7 +37,10 @@ api.interceptors.response.use(
 // Auth API calls
 export const authAPI = {
   register: async (userData) => {
+    console.log('🔍 Sending registration data:', userData);
+    console.log('🔗 API Base URL:', API_BASE_URL);
     const response = await api.post('/auth/register', userData);
+    console.log('✅ Registration response:', response.data);
     return response.data;
   },
   
@@ -56,6 +59,11 @@ export const authAPI = {
 export const propertiesAPI = {
   getAll: async () => {
     const response = await api.get('/properties');
+    return response.data;
+  },
+  
+  getAllPublic: async () => {
+    const response = await api.get('/properties/public');
     return response.data;
   },
   
@@ -95,6 +103,16 @@ export const bookingsAPI = {
   
   cancel: async (id) => {
     const response = await api.post(`/bookings/${id}/cancel`);
+    return response.data;
+  },
+  
+  getRealtorBookings: async () => {
+    const response = await api.get('/bookings/realtor');
+    return response.data;
+  },
+  
+  update: async (id, bookingData) => {
+    const response = await api.patch(`/bookings/${id}`, bookingData);
     return response.data;
   }
 };
@@ -144,6 +162,19 @@ export const billingAPI = {
   
   getSubscription: async () => {
     const response = await api.get('/billing/me');
+    return response.data;
+  }
+};
+
+// Newsletter API calls
+export const newsletterAPI = {
+  subscribe: async (email) => {
+    const response = await api.post('/newsletter/subscribe', { email });
+    return response.data;
+  },
+  
+  unsubscribe: async (email) => {
+    const response = await api.post('/newsletter/unsubscribe', { email });
     return response.data;
   }
 };

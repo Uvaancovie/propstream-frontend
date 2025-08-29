@@ -14,11 +14,14 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import PropertiesPage from './pages/PropertiesPage';
+import AddPropertyPage from './pages/AddPropertyPage';
 import BookingsPage from './pages/BookingsPage';
+import BookingPage from './pages/BookingPage';
 import CalendarPage from './pages/CalendarPage';
 import MessagesPage from './pages/MessagesPage';
 import BillingPage from './pages/BillingPage';
 import PublicPropertiesPage from './pages/PublicPropertiesPage';
+import BrowsePropertiesPage from './pages/BrowsePropertiesPage';
 import PropertyDetailsPage from './pages/PropertyDetailsPage';
 
 // Create a client for React Query
@@ -32,25 +35,48 @@ const queryClient = new QueryClient({
 });
 
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return <LoadingSpinner />;
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // If roles are specified, check if user has the required role
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
+    // Redirect based on user role
+    if (user?.role === 'client') {
+      return <Navigate to="/browse-properties" replace />;
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  return children;
 };
 
-// Public Route Component (redirect to dashboard if authenticated)
+// Public Route Component (redirect based on role if authenticated)
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return <LoadingSpinner />;
   }
 
-  return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
+  if (isAuthenticated) {
+    // Redirect based on role
+    if (user?.role === 'client') {
+      return <Navigate to="/browse-properties" replace />;
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  return children;
 };
 
 // Main App Layout
@@ -96,21 +122,29 @@ function App() {
                 } 
               />
 
-              {/* Public property routes - no auth required */}
+              {/* Public property routes - available to all */}
               <Route 
                 path="/browse-properties" 
-                element={<PublicPropertiesPage />} 
+                element={
+                  <AppLayout>
+                    <BrowsePropertiesPage />
+                  </AppLayout>
+                } 
               />
               <Route 
                 path="/property/:id" 
-                element={<PropertyDetailsPage />} 
+                element={
+                  <AppLayout>
+                    <PropertyDetailsPage />
+                  </AppLayout>
+                } 
               />
 
               {/* Protected routes */}
               <Route 
                 path="/dashboard" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['realtor', 'client']}>
                     <AppLayout>
                       <Dashboard />
                     </AppLayout>
@@ -120,9 +154,19 @@ function App() {
               <Route 
                 path="/properties" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['realtor']}>
                     <AppLayout>
                       <PropertiesPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/properties/add" 
+                element={
+                  <ProtectedRoute allowedRoles={['realtor']}>
+                    <AppLayout>
+                      <AddPropertyPage />
                     </AppLayout>
                   </ProtectedRoute>
                 } 
@@ -138,9 +182,19 @@ function App() {
                 } 
               />
               <Route 
+                path="/property/:propertyId/book" 
+                element={
+                  <ProtectedRoute allowedRoles={['client']}>
+                    <AppLayout>
+                      <BookingPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
                 path="/calendar" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['realtor']}>
                     <AppLayout>
                       <CalendarPage />
                     </AppLayout>

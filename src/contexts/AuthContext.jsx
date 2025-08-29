@@ -23,18 +23,32 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('authToken');
       const storedUser = localStorage.getItem('user');
       
+      console.log('🔍 Auth check - Token exists:', !!token, 'Stored user exists:', !!storedUser);
+      
       if (token && storedUser) {
         try {
           const userData = JSON.parse(storedUser);
+          console.log('👤 Setting user from localStorage:', userData);
           setUser(userData);
           setIsAuthenticated(true);
           
-          // Verify token is still valid
-          await authAPI.getProfile();
+          // Verify token is still valid by making a request
+          console.log('🔄 Verifying token with server...');
+          const profileResponse = await authAPI.getProfile();
+          console.log('✅ Token verification successful:', profileResponse);
+          
+          // Update user data if server returns newer data
+          if (profileResponse.user) {
+            console.log('📝 Updating user data from server');
+            setUser(profileResponse.user);
+            localStorage.setItem('user', JSON.stringify(profileResponse.user));
+          }
         } catch (error) {
-          console.error('Token validation failed:', error);
+          console.error('❌ Token validation failed:', error);
           logout();
         }
+      } else {
+        console.log('❌ No auth token or user data found');
       }
       setLoading(false);
     };

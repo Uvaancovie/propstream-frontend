@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, UserIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'client'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -24,6 +25,13 @@ const RegisterPage = () => {
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleRoleChange = (role) => {
+    setFormData(prev => ({ ...prev, role }));
+    if (errors.role) {
+      setErrors(prev => ({ ...prev, role: '' }));
     }
   };
 
@@ -50,6 +58,10 @@ const RegisterPage = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    if (!formData.role) {
+      newErrors.role = 'Please select a role';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -64,17 +76,25 @@ const RegisterPage = () => {
       const result = await register({
         name: formData.name,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        role: formData.role
       });
+      
       if (result.success) {
-        navigate('/dashboard');
+        // Redirect based on role
+        if (formData.role === 'realtor') {
+          navigate('/dashboard');
+        } else {
+          navigate('/browse-properties');
+        }
       } else {
         setErrors({ general: result.error });
       }
     } catch (error) {
       setErrors({ general: 'An unexpected error occurred' });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -108,6 +128,43 @@ const RegisterPage = () => {
                 {errors.general}
               </div>
             )}
+
+            {/* Role Selection */}
+            <div>
+              <label className="label">I want to register as:</label>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleRoleChange('client')}
+                  className={`p-4 border-2 rounded-lg transition-all text-center ${
+                    formData.role === 'client'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <UserIcon className="w-8 h-8 mx-auto mb-2" />
+                  <div className="font-medium text-sm">Client</div>
+                  <div className="text-xs text-gray-500">Browse & book</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleRoleChange('realtor')}
+                  className={`p-4 border-2 rounded-lg transition-all text-center ${
+                    formData.role === 'realtor'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <BuildingOfficeIcon className="w-8 h-8 mx-auto mb-2" />
+                  <div className="font-medium text-sm">Realtor</div>
+                  <div className="text-xs text-gray-500">List & manage</div>
+                </button>
+              </div>
+              {errors.role && (
+                <p className="mt-2 text-sm text-red-600">{errors.role}</p>
+              )}
+            </div>
 
             <div>
               <label htmlFor="name" className="label">
@@ -216,7 +273,7 @@ const RegisterPage = () => {
                     <span className="ml-2">Creating account...</span>
                   </>
                 ) : (
-                  'Create Account'
+                  `Register as ${formData.role === 'client' ? 'Client' : 'Realtor'}`
                 )}
               </button>
             </div>

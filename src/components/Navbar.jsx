@@ -26,13 +26,19 @@ const Navbar = () => {
   };
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-    { name: 'Properties', href: '/properties', icon: BuildingOfficeIcon },
-    { name: 'Bookings', href: '/bookings', icon: CalendarDaysIcon },
-    { name: 'Calendar', href: '/calendar', icon: CalendarDaysIcon },
-    { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon },
-    { name: 'Billing', href: '/billing', icon: CreditCardIcon },
+    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['realtor'] },
+    { name: 'Browse Properties', href: '/browse-properties', icon: BuildingOfficeIcon, roles: ['client'] },
+    { name: 'Properties', href: '/properties', icon: BuildingOfficeIcon, roles: ['realtor'] },
+    { name: 'Bookings', href: '/bookings', icon: CalendarDaysIcon, roles: ['client', 'realtor'] },
+    { name: 'Calendar', href: '/calendar', icon: CalendarDaysIcon, roles: ['realtor'] },
+    { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, roles: ['client', 'realtor'] },
+    { name: 'Billing', href: '/billing', icon: CreditCardIcon, roles: ['client', 'realtor'] },
   ];
+
+  // Filter navigation based on user role
+  const filteredNavigation = navigation.filter(item => 
+    !item.roles || item.roles.includes(user?.role)
+  );
 
   const isActivePath = (path) => location.pathname === path;
 
@@ -90,7 +96,7 @@ const Navbar = () => {
             
             {/* Desktop navigation */}
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {navigation.map((item) => {
+              {filteredNavigation.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
@@ -115,6 +121,11 @@ const Navbar = () => {
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700">
                 Welcome, {user?.name || user?.email}
+                {user?.role && (
+                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                  </span>
+                )}
               </span>
               <button
                 onClick={handleLogout}
@@ -146,7 +157,7 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <div className="sm:hidden">
           <div className="pt-2 pb-3 space-y-1">
-            {navigation.map((item) => {
+            {filteredNavigation.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
