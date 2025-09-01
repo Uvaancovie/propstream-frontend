@@ -82,7 +82,7 @@ const PublicRoute = ({ children }) => {
 
 // Main App Layout
 const AppLayout = ({ children }) => (
-  <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-[#0A0A0A]">
     <Navbar />
     <main className="flex-1">
       {children}
@@ -102,7 +102,7 @@ function App() {
                 path="/" 
                 element={
                   <PublicRoute>
-                    <PropnovaLanding />
+                    <LandingPage />
                   </PublicRoute>
                 } 
               />
@@ -126,7 +126,7 @@ function App() {
                 path="/old-landing" 
                 element={
                   <PublicRoute>
-                    <LandingPage />
+                    <PropnovaLanding />
                   </PublicRoute>
                 } 
               />

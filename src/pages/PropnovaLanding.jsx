@@ -566,62 +566,46 @@ const PropnovaLanding = () => {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-20 bg-white">
+      <section id="faq" className="py-20 bg-black">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Frequently asked questions</h2>
-            <p className="text-xl text-gray-600">Everything you need to know about Propnova</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Frequently asked questions</h2>
+            <p className="text-xl text-gray-300">Everything you need to know about Propnova</p>
           </div>
 
           <div className="max-w-3xl mx-auto space-y-6">
-            <Card className="border-violet-100">
-              <CardHeader>
-                <CardTitle className="text-lg">How does the calendar sync work?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">
-                  Propnova connects directly with Airbnb, Booking.com, VRBO, and other platforms using their official APIs. 
-                  When a booking comes in on any platform, it automatically blocks those dates across all your other listings. 
-                  No more manual updates or double bookings.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="bg-black border border-gray-700 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-3">How does the calendar sync work?</h3>
+              <p className="text-gray-300">
+                Propnova connects directly with Airbnb, Booking.com, VRBO, and other platforms using their official APIs. 
+                When a booking comes in on any platform, it automatically blocks those dates across all your other listings. 
+                No more manual updates or double bookings.
+              </p>
+            </div>
 
-            <Card className="border-violet-100">
-              <CardHeader>
-                <CardTitle className="text-lg">Is Payfast integration included?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">
-                  Yes! We have full Payfast integration ready to go, plus Stripe for international guests. 
-                  Set up secure payments in under 5 minutes with our South African-optimized checkout flow.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="bg-black border border-gray-700 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-3">Is Payfast integration included?</h3>
+              <p className="text-gray-300">
+                Yes! We have full Payfast integration ready to go, plus Stripe for international guests. 
+                Set up secure payments in under 5 minutes with our South African-optimized checkout flow.
+              </p>
+            </div>
 
-            <Card className="border-violet-100">
-              <CardHeader>
-                <CardTitle className="text-lg">Can I really set this up in 5 minutes?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">
-                  Absolutely. Connect your first property, sync one calendar, and set up basic messaging templates in under 5 minutes. 
-                  Advanced features and automations can be added as you grow.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="bg-black border border-gray-700 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-3">Can I really set this up in 5 minutes?</h3>
+              <p className="text-gray-300">
+                Absolutely. Connect your first property, sync one calendar, and set up basic messaging templates in under 5 minutes. 
+                Advanced features and automations can be added as you grow.
+              </p>
+            </div>
 
-            <Card className="border-violet-100">
-              <CardHeader>
-                <CardTitle className="text-lg">What happens after the 14-day trial?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">
-                  You can continue with our Growth plan (R199/month) or downgrade to our limited free tier. 
-                  No credit card required for the trial, and you can cancel anytime with no questions asked.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="bg-black border border-gray-700 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-3">What happens after the 14-day trial?</h3>
+              <p className="text-gray-300">
+                You can continue with our Growth plan (R199/month) or downgrade to our limited free tier. 
+                No credit card required for the trial, and you can cancel anytime with no questions asked.
+              </p>
+            </div>
           </div>
         </div>
       </section>

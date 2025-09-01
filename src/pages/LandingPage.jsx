@@ -1,259 +1,675 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import NewsletterSignup from '../components/NewsletterSignup';
 import { 
-  CalendarDaysIcon, 
-  BuildingOfficeIcon, 
-  ChartBarIcon, 
-  CurrencyDollarIcon,
-  UserGroupIcon,
-  ClockIcon,
-  ShieldCheckIcon,
-  GlobeAltIcon
-} from '@heroicons/react/24/outline';
+  Rocket, 
+  CreditCard, 
+  Timer, 
+  ShieldCheck, 
+  Stars as StarsIcon,
+  CalendarCheck2,
+  Send,
+  PlugZap,
+  Monitor,
+  BarChart3,
+  Users,
+  MessageCircle,
+  Zap,
+  CheckCircle,
+  ChevronDown,
+  Menu,
+  X
+} from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
 
 const LandingPage = () => {
-  const features = [
-    {
-      icon: BuildingOfficeIcon,
-      title: 'Property Management',
-      description: 'Manage all your rental properties in one place with detailed information and photos.'
-    },
-    {
-      icon: CalendarDaysIcon,
-      title: 'Calendar Sync',
-      description: 'Sync calendars across Airbnb, Vrbo, Booking.com and other platforms automatically.'
-    },
-    {
-      icon: UserGroupIcon,
-      title: 'Guest Communication',
-      description: 'Automated message templates for seamless guest communication throughout their stay.'
-    },
-    {
-      icon: ChartBarIcon,
-      title: 'Analytics & Reports',
-      description: 'Track bookings, revenue, and occupancy rates with comprehensive analytics.'
-    },
-    {
-      icon: CurrencyDollarIcon,
-      title: 'Billing Integration',
-      description: 'Secure payment processing with South African Payfast integration.'
-    },
-    {
-      icon: ShieldCheckIcon,
-      title: 'Secure & Reliable',
-      description: 'Enterprise-grade security with JWT authentication and data encryption.'
-    }
-  ];
-
-  const benefits = [
-    {
-      icon: ClockIcon,
-      title: 'Save Time',
-      description: 'Automate calendar syncing and guest communications to save hours every week.'
-    },
-    {
-      icon: GlobeAltIcon,
-      title: 'Multi-Platform',
-      description: 'Works with all major booking platforms including Airbnb, Vrbo, and Booking.com.'
-    },
-    {
-      icon: ChartBarIcon,
-      title: 'Increase Revenue',
-      description: 'Prevent double bookings and optimize pricing with real-time calendar management.'
-    }
-  ];
-
-  return (
-    <div className="bg-white">
-      {/* Header */}
-      <header className="relative bg-gradient-to-br from-primary-600 to-primary-800">
-        <div className="absolute inset-0 bg-black opacity-10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <span className="text-3xl mr-3">🏖️</span>
-              <span className="text-2xl font-bold text-white">Propstream</span>
-            </div>
-            <div className="flex space-x-4">
-              <Link
-                to="/login"
-                className="text-white hover:text-primary-200 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="bg-white text-primary-600 hover:bg-primary-50 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
+  // Header Component
+  const Header = () => {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    
+    return (
+      <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/60 bg-[#0A0A0A]/80 border-b border-slate-800">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          <div className="flex h-14 sm:h-16 items-center justify-between">
+            <Link to="/" className="flex items-center space-x-2">
+              <img 
+                src="/novaprop-logo.jpeg" 
+                alt="NovaProp" 
+                className="h-6 w-6 sm:h-8 sm:w-8 rounded-lg shadow-[0_0_20px_rgba(124,58,237,.45)]" 
+              />
+              <span className="text-lg sm:text-xl font-bold text-white">PropNova</span>
+            </Link>
+            
+            <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
+              <Link to="/features" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">Features</Link>
+              <Link to="/pricing" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">Pricing</Link>
+              <Link to="/about" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">About</Link>
+              <Link to="/contact" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">Contact</Link>
+            </nav>
+            
+            <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
+              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800/60 text-sm lg:text-base px-3 lg:px-4">
+                Sign In
+              </Button>
+              <Button className="bg-violet-600 hover:bg-violet-700 shadow-[0_0_24px_rgba(124,58,237,.35)] text-sm lg:text-base px-3 lg:px-4">
                 Get Started
-              </Link>
+              </Button>
             </div>
+            
+            <button 
+              className="md:hidden text-slate-400 hover:text-white p-1"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
+            </button>
           </div>
+          
+          {isMenuOpen && (
+            <div className="md:hidden border-t border-slate-800 py-4">
+              <nav className="flex flex-col space-y-3">
+                <Link to="/features" className="text-slate-400 hover:text-white transition-colors py-2">Features</Link>
+                <Link to="/pricing" className="text-slate-400 hover:text-white transition-colors py-2">Pricing</Link>
+                <Link to="/about" className="text-slate-400 hover:text-white transition-colors py-2">About</Link>
+                <Link to="/contact" className="text-slate-400 hover:text-white transition-colors py-2">Contact</Link>
+                <div className="flex flex-col space-y-2 pt-3 border-t border-slate-800">
+                  <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800/60 justify-start py-3">
+                    Sign In
+                  </Button>
+                  <Button className="bg-violet-600 hover:bg-violet-700 justify-start py-3">
+                    Get Started
+                  </Button>
+                </div>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
+    );
+  };
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-600 to-primary-800 py-20">
-        <div className="absolute inset-0 bg-black opacity-10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
-            Manage Your Properties Like a Pro
-          </h1>
-          <p className="text-xl md:text-2xl text-primary-100 mb-8 max-w-3xl mx-auto animate-slide-up">
-            Streamline your property management with automated calendar syncing, 
-            guest communications, and seamless booking management across all platforms.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
-            <Link
-              to="/register"
-              className="bg-white text-primary-600 hover:bg-primary-50 px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+  // Hero Component
+  const Hero = () => {
+    return (
+      <section className="relative overflow-hidden py-12 sm:py-16 md:py-24 lg:py-32">
+        {/* Cosmic gradient aura */}
+        <div className="pointer-events-none absolute -inset-x-40 -top-40 -z-10 blur-3xl">
+          <div className="mx-auto aspect-[1155/678] w-[36rem] md:w-[80rem]
+            bg-gradient-to-tr from-violet-900/30 via-violet-600/20 to-transparent opacity-60"
+            style={{ clipPath: "polygon(74% 44%, 100% 61%, 92% 100%, 60% 88%, 30% 100%, 0 76%, 0 29%, 18% 0, 53% 7%, 79% 26%)" }}
+          />
+        </div>
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left Content */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ duration: 0.6 }}
+              className="text-center lg:text-left"
             >
-              Start Free Trial
-            </Link>
-            <Link
-              to="/browse-properties"
-              className="border-2 border-white text-white hover:bg-white hover:text-primary-600 px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105"
+              <Badge className="bg-violet-700/70 text-white border border-violet-500/40 mb-4">Coming Soon</Badge>
+
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight tracking-tight">
+                <span className="text-white block">Save lightyears of effort</span>{" "}
+                <span className="bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent block">
+                  with a unified property hub
+                </span>
+              </h1>
+
+              <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl lg:text-xl text-slate-300 max-w-xl mx-auto lg:mx-0">
+                PropNova aligns your listings, calendar, and messaging—so hosts & agencies work in perfect orbit, not in chaos.
+              </p>
+
+              <div className="mt-4 sm:mt-6 flex flex-wrap gap-3 sm:gap-4 text-sm text-slate-300 justify-center lg:justify-start">
+                <span className="inline-flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-violet-400" /> Secure
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <Timer className="h-4 w-4 text-violet-400" /> 5-minute launch
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-violet-400" /> Payfast ready
+                </span>
+              </div>
+
+              {/* Waitlist + CTAs */}
+              <form
+                className="mt-6 sm:mt-8 space-y-3"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const email = e.currentTarget.querySelector('input[type="email"]').value;
+                  const url = `${import.meta.env.VITE_API_URL || "https://propstream-api.onrender.com"}/api/waitlist`;
+                  try {
+                    const r = await fetch(url, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ email, source: "landing" }),
+                    });
+                    alert(r.ok
+                      ? "You're on the list! Confirmation sent. We'll ping you again in ~12 days."
+                      : "Could not join the waitlist. Try again.");
+                    if (r.ok) e.currentTarget.reset();
+                  } catch {
+                    alert("Network error. Try again.");
+                  }
+                }}
+              >
+                <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto lg:mx-0">
+                  <Input 
+                    type="email" 
+                    required 
+                    placeholder="Enter your email to join the constellation" 
+                    className="flex-1 bg-[#0F0F13] border-slate-700 text-white placeholder:text-slate-500 text-sm sm:text-base" 
+                  />
+                  <Button type="submit" className="bg-violet-600 hover:bg-violet-700 whitespace-nowrap">
+                    ✨ Join Waitlist
+                  </Button>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-md mx-auto lg:mx-0">
+                  <Button 
+                    className="flex-1 bg-violet-700/40 hover:bg-violet-700/60 border border-violet-700/40" 
+                    onClick={() => (window.location.href = "/register")}
+                  >
+                    🚀 Start Free Trial
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 border-slate-700 text-white hover:bg-slate-800/60" 
+                    onClick={() => (window.location.href = "/demo")}
+                  >
+                    🌠 Book a Demo
+                  </Button>
+                </div>
+              </form>
+
+              <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-slate-400 text-center lg:text-left">
+                Built for South African Property Pros — professional tools designed for local hosts and agencies.
+              </p>
+            </motion.div>
+
+            {/* Right visual - Mansion House */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.98 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="relative"
             >
-              Browse Properties
-            </Link>
-            <Link
-              to="/login"
-              className="border-2 border-primary-300 text-primary-100 hover:bg-primary-500 hover:text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105"
-            >
-              Sign In
-            </Link>
+              {/* Mansion House Illustration */}
+              <div className="relative">
+                <Card className="rounded-3xl bg-[#0B0B0E] border border-violet-900/40 shadow-[0_0_60px_rgba(124,58,237,.15)] overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="aspect-[4/3] w-full bg-gradient-to-br from-[#0E0E12] to-[#141424] relative">
+                      {/* Sky gradient */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-violet-900/20 via-purple-900/10 to-transparent"></div>
+                      
+                      {/* Stars */}
+                      <div className="absolute inset-0">
+                        {[...Array(20)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="absolute w-1 h-1 bg-white rounded-full opacity-60"
+                            style={{
+                              left: `${Math.random() * 100}%`,
+                              top: `${Math.random() * 40}%`,
+                              animationDelay: `${Math.random() * 3}s`
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Mansion Silhouette */}
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4/5 h-3/5">
+                        {/* Main Building */}
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2/3 h-3/4 bg-gradient-to-t from-slate-800 to-slate-700 rounded-t-lg">
+                          {/* Windows */}
+                          <div className="grid grid-cols-4 gap-1 p-2 h-1/2 mt-4">
+                            {[...Array(8)].map((_, i) => (
+                              <div 
+                                key={i} 
+                                className="bg-yellow-400/80 rounded-sm shadow-[0_0_10px_rgba(251,191,36,0.5)]"
+                              />
+                            ))}
+                          </div>
+                          
+                          {/* Grand Entrance */}
+                          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1/2 bg-gradient-to-t from-slate-900 to-slate-800 rounded-t-full">
+                            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-1/2 h-3/4 bg-yellow-400/60 rounded-t-full"></div>
+                          </div>
+                        </div>
+
+                        {/* Left Wing */}
+                        <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-gradient-to-t from-slate-800 to-slate-700 rounded-t-lg">
+                          <div className="grid grid-cols-2 gap-1 p-1 h-1/2 mt-2">
+                            {[...Array(4)].map((_, i) => (
+                              <div key={i} className="bg-yellow-400/70 rounded-sm" />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Right Wing */}
+                        <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-gradient-to-t from-slate-800 to-slate-700 rounded-t-lg">
+                          <div className="grid grid-cols-2 gap-1 p-1 h-1/2 mt-2">
+                            {[...Array(4)].map((_, i) => (
+                              <div key={i} className="bg-yellow-400/70 rounded-sm" />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Roof Elements */}
+                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-2/3 h-8 bg-slate-600 clip-triangle"></div>
+                        <div className="absolute -top-3 left-0 w-1/3 h-4 bg-slate-600 clip-triangle-small"></div>
+                        <div className="absolute -top-3 right-0 w-1/3 h-4 bg-slate-600 clip-triangle-small"></div>
+                      </div>
+
+                      {/* Property Management Icons Floating */}
+                      <div className="absolute top-4 left-4 bg-violet-600/20 backdrop-blur-sm rounded-lg p-2 border border-violet-500/30">
+                        <CalendarCheck2 className="h-4 w-4 text-violet-300" />
+                      </div>
+                      <div className="absolute top-4 right-4 bg-blue-600/20 backdrop-blur-sm rounded-lg p-2 border border-blue-500/30">
+                        <MessageCircle className="h-4 w-4 text-blue-300" />
+                      </div>
+                      <div className="absolute bottom-20 right-8 bg-green-600/20 backdrop-blur-sm rounded-lg p-2 border border-green-500/30">
+                        <BarChart3 className="h-4 w-4 text-green-300" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Floating stats */}
+                <div className="absolute -bottom-4 -left-4 bg-[#0B0B0E] border border-violet-900/40 rounded-xl p-3 shadow-lg hidden sm:block">
+                  <div className="text-violet-400 text-xs font-medium">Properties Managed</div>
+                  <div className="text-white text-lg font-bold">2,847+</div>
+                </div>
+                <div className="absolute -top-4 -right-4 bg-[#0B0B0E] border border-violet-900/40 rounded-xl p-3 shadow-lg hidden sm:block">
+                  <div className="text-violet-400 text-xs font-medium">Time Saved</div>
+                  <div className="text-white text-lg font-bold">5h/week</div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
+    );
+  };
 
-      {/* Features Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Everything You Need to Manage Properties
+  // Built for SA Component
+  const BuiltForSA = () => {
+    return (
+      <section className="py-10 sm:py-12 md:py-16 lg:py-20 bg-gradient-to-b from-[#0A0A0A] to-[#0E0E12]">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl space-y-3 sm:space-y-4">
+            <Badge className="bg-violet-700/70 text-white border border-violet-700/50 text-xs sm:text-sm">South Africa Ready</Badge>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white">Built for South African Property Pros</h2>
+            <p className="text-slate-300 text-base sm:text-lg lg:text-xl max-w-3xl">
+              Professional tools designed for local hosts and agencies—simple, modern, and built for growth on Earth and beyond.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  };
+
+  // Features Component  
+  const Features = () => {
+    const features = [
+      {
+        icon: Monitor,
+        title: "Unified Command Center",
+        desc: "Dashboard that brings all your properties, bookings, and communications into perfect orbit.",
+        bullets: ["Real-time overview", "Smart insights", "Performance metrics"]
+      },
+      {
+        icon: CalendarCheck2,
+        title: "Smart Calendar Sync",
+        desc: "Prevent double bookings across Airbnb, Booking.com, and VRBO.",
+        bullets: ["Two-way sync", "Instant date blocking", "Multi-platform alignment"]
+      },
+      {
+        icon: Send,
+        title: "Auto Messaging That Lands",
+        desc: "Effortless check-ins, house rules and follow-ups—always on time.",
+        bullets: ["SA-ready templates", "Auto-scheduled messages", "Multi-language support"]
+      },
+      {
+        icon: PlugZap,
+        title: "Workflows on Autopilot",
+        desc: "Let PropNova handle the repetitive ops while you scale.",
+        bullets: ["Zapier & Make integration", "Custom cosmic workflows", "Smart notifications"]
+      }
+    ];
+
+    return (
+      <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-[#0A0A0A]">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <Badge className="bg-violet-700/70 text-white border border-violet-700/50 mb-4">Features at a glance</Badge>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 sm:mb-6">
+              Turn property chaos into effortless orbit
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              From calendar management to guest communications, Propstream has all the tools 
-              you need to run a successful property rental business.
+            <p className="text-slate-300 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto">
+              One mission control for dashboard, calendar sync, guest comms, and automations.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div
+                <motion.div
                   key={index}
-                  className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 animate-fade-in"
-                  style={{ animationDelay: `${index * 0.1}s` }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  className="h-full"
                 >
-                  <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-                    <Icon className="w-6 h-6 text-primary-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600">
-                    {feature.description}
-                  </p>
-                </div>
+                  <Card className="h-full bg-[#0B0B0E] border border-violet-900/40 hover:border-violet-700/60 transition-colors">
+                    <CardContent className="p-4 sm:p-6 h-full flex flex-col">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-violet-900/30 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                        <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-violet-400" />
+                      </div>
+                      <h3 className="text-base sm:text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                      <p className="text-slate-300 mb-3 sm:mb-4 text-sm sm:text-base flex-grow">{feature.desc}</p>
+                      <ul className="space-y-1 text-slate-300 text-xs sm:text-sm">
+                        {feature.bullets.map((bullet, i) => (
+                          <li key={i} className="flex items-center gap-2">
+                            <CheckCircle className="h-3 w-3 text-violet-400 flex-shrink-0" />
+                            <span>{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               );
             })}
           </div>
         </div>
       </section>
+    );
+  };
 
-      {/* Benefits Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Why Property Managers Choose Propstream
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Join thousands of property managers who have streamlined their operations with Propstream.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {benefits.map((benefit, index) => {
-              const Icon = benefit.icon;
-              return (
-                <div
-                  key={index}
-                  className="text-center animate-slide-up"
-                  style={{ animationDelay: `${index * 0.2}s` }}
-                >
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-gray-600 text-lg">
-                    {benefit.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Stay Informed
-            </h2>
-            <p className="text-lg text-gray-600">
-              Get the latest property management tips, market insights, and platform updates
-            </p>
-          </div>
-          <div className="max-w-md mx-auto">
-            <NewsletterSignup />
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-primary-600 to-primary-700 py-16">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Streamline Your Property Management?
-          </h2>
-          <p className="text-xl text-primary-100 mb-8">
-            Join Propstream today and take control of your property rental business.
-          </p>
-          <Link
-            to="/register"
-            className="bg-white text-primary-600 hover:bg-primary-50 px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-          >
-            Get Started Free
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <span className="text-3xl mr-3">🏖️</span>
-              <span className="text-2xl font-bold text-white">Propstream</span>
+  // Time Savings Component
+  const TimeSavings = () => {
+    return (
+      <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-[#0E0E12] to-[#0A0A0A]">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div className="text-center lg:text-left">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 sm:mb-6">Reclaim Your Orbit of Time</h2>
+              <p className="text-slate-300 text-base sm:text-lg lg:text-xl mb-6">
+                With PropNova, hosts typically save <span className="text-white font-semibold">5 hours every week</span>—that's <span className="text-white font-semibold">20 hours per month</span>.
+              </p>
+              <ul className="space-y-3 sm:space-y-4 text-slate-300 text-sm sm:text-base max-w-md mx-auto lg:mx-0">
+                <li className="flex items-center gap-3">
+                  <Timer className="h-4 w-4 sm:h-5 sm:w-5 text-violet-400 flex-shrink-0" />
+                  <span>Half a full work week back every month</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-violet-400 flex-shrink-0" />
+                  <span>R2,000+ in monthly time value for most SA hosts</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <StarsIcon className="h-4 w-4 sm:h-5 sm:w-5 text-violet-400 flex-shrink-0" />
+                  <span>More capacity to grow, or more life on Earth 🌍</span>
+                </li>
+              </ul>
             </div>
-            <p className="text-gray-400 mb-4">
-              Professional property management made simple.
+            <Card className="bg-[#0B0B0E] border border-slate-800">
+              <CardHeader>
+                <CardTitle className="text-white text-lg sm:text-xl text-center lg:text-left">What could you do with 20 extra hours?</CardTitle>
+              </CardHeader>
+              <CardContent className="text-slate-300 space-y-2 sm:space-y-3 text-sm sm:text-base">
+                <p>• Welcome more guests</p>
+                <p>• Grow your property portfolio</p>
+                <p>• Step out of the grind and recharge</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+    );
+  };
+
+  // Pricing Component
+  const Pricing = () => {
+    const plans = [
+      {
+        name: "Solo Explorer",
+        price: "Free",
+        period: "14-day trial",
+        badge: "✨ Starter",
+        features: [
+          "Up to 2 properties",
+          "Basic sync & templates", 
+          "Email support",
+          "Core automations"
+        ]
+      },
+      {
+        name: "Expanding Orbit", 
+        price: "R199",
+        period: "per month",
+        badge: "🚀 Growth",
+        popular: true,
+        features: [
+          "Up to 10 properties",
+          "Advanced automations",
+          "Analytics & reports",
+          "Priority support",
+          "Custom workflows"
+        ]
+      },
+      {
+        name: "Galactic Leader",
+        price: "Custom",
+        period: "pricing",
+        badge: "🌌 Agency",
+        features: [
+          "Unlimited properties",
+          "White-label options", 
+          "Dedicated support",
+          "Custom integrations",
+          "Team management"
+        ]
+      }
+    ];
+
+    return (
+      <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-[#0A0A0A] to-[#0E0E12]">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 sm:mb-6">
+              Choose Your Cosmic Plan
+            </h2>
+            <p className="text-slate-300 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto">
+              Start free, scale as you grow. No hidden fees, no long-term contracts.
             </p>
-            <p className="text-gray-500 text-sm">
-              © 2025 Propstream. All rights reserved.
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+            {plans.map((plan, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="h-full"
+              >
+                <Card className={`relative h-full flex flex-col ${
+                  plan.popular 
+                    ? 'bg-gradient-to-b from-[#0B0B0E] to-[#121225] border-violet-800 shadow-[0_0_60px_rgba(124,58,237,.15)]' 
+                    : 'bg-[#0B0B0E] border border-slate-800'
+                }`}>
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-violet-600 text-white text-xs sm:text-sm">Most Popular</Badge>
+                    </div>
+                  )}
+                  <CardContent className="p-4 sm:p-6 flex flex-col h-full">
+                    <div className="text-center mb-6 flex-shrink-0">
+                      <Badge className="bg-violet-700/70 text-white border border-violet-700/50 mb-3 text-xs sm:text-sm">
+                        {plan.badge}
+                      </Badge>
+                      <h3 className="text-lg sm:text-xl font-bold text-white mb-2">{plan.name}</h3>
+                      <div className="mb-4">
+                        <span className="text-2xl sm:text-3xl font-bold text-white">{plan.price}</span>
+                        <span className="text-slate-400 ml-1 text-sm sm:text-base">/{plan.period}</span>
+                      </div>
+                    </div>
+                    
+                    <ul className="space-y-2 sm:space-y-3 mb-6 flex-grow">
+                      {plan.features.map((feature, i) => (
+                        <li key={i} className="flex items-center gap-3 text-slate-300 text-sm sm:text-base">
+                          <CheckCircle className="h-4 w-4 text-violet-400 flex-shrink-0" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <Button 
+                      className={`w-full mt-auto text-sm sm:text-base ${
+                        plan.popular 
+                          ? 'bg-violet-600 hover:bg-violet-700' 
+                          : 'bg-violet-700/40 hover:bg-violet-700/60 border border-violet-700/40'
+                      }`}
+                    >
+                      {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  };
+
+  // FAQ Component
+  const FAQ = () => {
+    const [openFaq, setOpenFaq] = useState(null);
+    
+    const faqs = [
+      {
+        question: "How does calendar sync work?",
+        answer: "Our calendar sync works like gravity—automatically and reliably. Connect your Airbnb, Booking.com, and VRBO accounts, and PropNova keeps all calendars perfectly aligned in real-time."
+      },
+      {
+        question: "Is Payfast integration included?",
+        answer: "Yes! Payfast is built-in for South African hosts. Accept payments securely with zero additional setup required."
+      },
+      {
+        question: "How long does setup take?",
+        answer: "Setup takes about 5 minutes. Connect your accounts, customize your messaging templates, and you're ready to automate your property management."
+      },
+      {
+        question: "What happens after the free trial?",
+        answer: "After your 14-day trial, choose the Growth plan (R199/month) or continue with our free tier (up to 2 properties with basic features)."
+      },
+      {
+        question: "Can I cancel anytime?",
+        answer: "Absolutely. No long-term contracts, no cancellation fees. Your data stays yours, and you can export everything if needed."
+      }
+    ];
+
+    return (
+      <section className="py-14 md:py-20 bg-[#0A0A0A]">
+        <div className="container max-w-4xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-slate-300 text-lg">
+              Everything you need to know about PropNova
             </p>
+          </div>
+
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <Card key={index} className="bg-[#0B0B0E] border border-slate-800">
+                <CardContent className="p-0">
+                  <button
+                    className="w-full p-6 text-left flex items-center justify-between hover:bg-slate-800/20 transition-colors"
+                    onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                  >
+                    <span className="font-semibold text-white">{faq.question}</span>
+                    <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${
+                      openFaq === index ? 'rotate-180' : ''
+                    }`} />
+                  </button>
+                  {openFaq === index && (
+                    <div className="px-6 pb-6">
+                      <p className="text-slate-300">{faq.answer}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  };
+
+  // Footer Component
+  const Footer = () => {
+    return (
+      <footer className="bg-[#0A0A0A] border-t border-slate-800 py-12">
+        <div className="container max-w-6xl mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="md:col-span-2">
+              <div className="flex items-center space-x-2 mb-4">
+                <img src="/novaprop-logo.jpeg" alt="NovaProp" className="h-8 w-8 rounded-lg shadow-[0_0_20px_rgba(124,58,237,.45)]" />
+                <span className="text-xl font-bold text-white">PropNova</span>
+              </div>
+              <p className="text-slate-400 mb-4">
+                Professional property management made simple. Built for South African hosts and agencies.
+              </p>
+              <p className="text-slate-500 text-sm">
+                © 2025 PropNova. All rights reserved.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-white mb-4">Product</h4>
+              <ul className="space-y-2 text-slate-400">
+                <li><Link to="/features" className="hover:text-white transition-colors">Features</Link></li>
+                <li><Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+                <li><Link to="/demo" className="hover:text-white transition-colors">Demo</Link></li>
+                <li><Link to="/security" className="hover:text-white transition-colors">Security</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-white mb-4">Company</h4>
+              <ul className="space-y-2 text-slate-400">
+                <li><Link to="/about" className="hover:text-white transition-colors">About</Link></li>
+                <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link></li>
+                <li><Link to="/terms" className="hover:text-white transition-colors">Terms</Link></li>
+              </ul>
+            </div>
           </div>
         </div>
       </footer>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0A0A0A] text-white starfield" style={{ backgroundColor: '#0A0A0A' }}>
+      <Header />
+      <Hero />
+      <BuiltForSA />
+      <Features />
+      <TimeSavings />
+      <Pricing />
+      <FAQ />
+      <Footer />
     </div>
   );
 };
