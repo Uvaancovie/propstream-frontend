@@ -9,6 +9,7 @@ import Navbar from './components/Navbar';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // Pages
+import PropnovaLanding from './pages/PropnovaLanding';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -101,7 +102,7 @@ function App() {
                 path="/" 
                 element={
                   <PublicRoute>
-                    <LandingPage />
+                    <PropnovaLanding />
                   </PublicRoute>
                 } 
               />
@@ -118,6 +119,14 @@ function App() {
                 element={
                   <PublicRoute>
                     <RegisterPage />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/old-landing" 
+                element={
+                  <PublicRoute>
+                    <LandingPage />
                   </PublicRoute>
                 } 
               />
