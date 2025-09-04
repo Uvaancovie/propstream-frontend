@@ -11,7 +11,6 @@ import LoadingSpinner from './components/LoadingSpinner';
 // Pages
 import PropnovaLanding from './pages/PropnovaLanding';
 import LandingPage from './pages/LandingPage';
-import WaitlistPage from './pages/WaitlistPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
@@ -128,14 +127,6 @@ function App() {
                 element={
                   <PublicRoute>
                     <PropnovaLanding />
-                  </PublicRoute>
-                } 
-              />
-              <Route 
-                path="/waitlist" 
-                element={
-                  <PublicRoute>
-                    <WaitlistPage />
                   </PublicRoute>
                 } 
               />

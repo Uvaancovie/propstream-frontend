@@ -94,6 +94,11 @@ const WaitlistPage = () => {
     }
   };
 
+  // Simple input change handler - no preventDefault or complex logic
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+  };
+
   // Header Component
   const Header = () => (
     <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/60 bg-[#0A0A0A]/80 border-b border-slate-800">
@@ -132,11 +137,7 @@ const WaitlistPage = () => {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 0.6 }}
-        >
+        <div>
           <Badge className="bg-violet-700/70 text-white border border-violet-500/40 mb-6 text-lg px-4 py-2">
             🚀 Launching September 11, 2025
           </Badge>
@@ -167,10 +168,11 @@ const WaitlistPage = () => {
                   type="email" 
                   required 
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
                   placeholder="Enter your email for exclusive early access" 
                   className="flex-1 bg-[#0F0F13] border-slate-700 text-white placeholder:text-slate-500 text-lg h-12" 
                   disabled={isSubmitting}
+                  autoComplete="email"
                 />
                 <Button 
                   type="submit" 
@@ -215,7 +217,7 @@ const WaitlistPage = () => {
               <Heart className="h-4 w-4 text-violet-400" /> Made in South Africa
             </span>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
@@ -467,11 +469,7 @@ const WaitlistPage = () => {
   const FinalCTASection = () => (
     <section className="py-16 md:py-24 bg-gradient-to-b from-[#0A0A0A] to-[#0E0E12]">
       <div className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
+        <div>
           <div className="bg-gradient-to-r from-violet-600/20 to-blue-600/20 border border-violet-500/40 rounded-3xl p-8 md:p-12 backdrop-blur-sm">
             <Rocket className="h-16 w-16 text-violet-400 mx-auto mb-6" />
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-6">
@@ -488,10 +486,11 @@ const WaitlistPage = () => {
                     type="email" 
                     required 
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={handleEmailChange}
                     placeholder="Enter your email" 
                     className="flex-1 bg-[#0F0F13] border-slate-700 text-white placeholder:text-slate-500 h-12" 
                     disabled={isSubmitting}
+                    autoComplete="email"
                   />
                   <Button 
                     type="submit" 
@@ -526,7 +525,7 @@ const WaitlistPage = () => {
               </motion.div>
             )}
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
