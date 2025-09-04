@@ -51,12 +51,11 @@ const LandingPage = () => {
             </nav>
             
             <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
-              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800/60 text-sm lg:text-base px-3 lg:px-4">
-                Sign In
-              </Button>
-              <Button className="bg-violet-600 hover:bg-violet-700 shadow-[0_0_24px_rgba(124,58,237,.35)] text-sm lg:text-base px-3 lg:px-4">
-                Get Started
-              </Button>
+              <Link to="/waitlist">
+                <Button className="bg-violet-600 hover:bg-violet-700 shadow-[0_0_24px_rgba(124,58,237,.35)] text-sm lg:text-base px-3 lg:px-4">
+                  ✨ Join Waitlist
+                </Button>
+              </Link>
             </div>
             
             <button 
@@ -75,12 +74,11 @@ const LandingPage = () => {
                 <Link to="/about" className="text-slate-400 hover:text-white transition-colors py-2">About</Link>
                 <Link to="/contact" className="text-slate-400 hover:text-white transition-colors py-2">Contact</Link>
                 <div className="flex flex-col space-y-2 pt-3 border-t border-slate-800">
-                  <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800/60 justify-start py-3">
-                    Sign In
-                  </Button>
-                  <Button className="bg-violet-600 hover:bg-violet-700 justify-start py-3">
-                    Get Started
-                  </Button>
+                  <Link to="/waitlist">
+                    <Button className="bg-violet-600 hover:bg-violet-700 justify-start py-3 w-full">
+                      ✨ Join Waitlist
+                    </Button>
+                  </Link>
                 </div>
               </nav>
             </div>
@@ -111,17 +109,17 @@ const LandingPage = () => {
               transition={{ duration: 0.6 }}
               className="text-center lg:text-left"
             >
-              <Badge className="bg-violet-700/70 text-white border border-violet-500/40 mb-4">Coming Soon</Badge>
+              <Badge className="bg-violet-700/70 text-white border border-violet-500/40 mb-4">🚀 Launching in 7 Days</Badge>
 
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight tracking-tight">
-                <span className="text-white block">Save lightyears of effort</span>{" "}
+                <span className="text-white block">Join the PropNova</span>{" "}
                 <span className="bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent block">
-                  with a unified property hub
+                  revolution waitlist
                 </span>
               </h1>
 
               <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl lg:text-xl text-slate-300 max-w-xl mx-auto lg:mx-0">
-                PropNova aligns your listings, calendar, and messaging—so hosts & agencies work in perfect orbit, not in chaos.
+                Be among the first to experience the future of property management. Get exclusive early access and save 50% on your first year.
               </p>
 
               <div className="mt-4 sm:mt-6 flex flex-wrap gap-3 sm:gap-4 text-sm text-slate-300 justify-center lg:justify-start">
@@ -136,56 +134,14 @@ const LandingPage = () => {
                 </span>
               </div>
 
-              {/* Waitlist + CTAs */}
-              <form
-                className="mt-6 sm:mt-8 space-y-3"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  const email = e.currentTarget.querySelector('input[type="email"]').value;
-                  const url = `${import.meta.env.VITE_API_URL || "https://propstream-api.onrender.com"}/api/waitlist`;
-                  try {
-                    const r = await fetch(url, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ email, source: "landing" }),
-                    });
-                    alert(r.ok
-                      ? "You're on the list! Confirmation sent. We'll ping you again in ~12 days."
-                      : "Could not join the waitlist. Try again.");
-                    if (r.ok) e.currentTarget.reset();
-                  } catch {
-                    alert("Network error. Try again.");
-                  }
-                }}
-              >
-                <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto lg:mx-0">
-                  <Input 
-                    type="email" 
-                    required 
-                    placeholder="Enter your email to join the constellation" 
-                    className="flex-1 bg-[#0F0F13] border-slate-700 text-white placeholder:text-slate-500 text-sm sm:text-base" 
-                  />
-                  <Button type="submit" className="bg-violet-600 hover:bg-violet-700 whitespace-nowrap">
-                    ✨ Join Waitlist
+              {/* Waitlist Form */}
+              <div className="mt-6 sm:mt-8 space-y-3">
+                <Link to="/waitlist">
+                  <Button className="bg-violet-600 hover:bg-violet-700 text-lg px-8 py-4 w-full sm:w-auto">
+                    🚀 Join Waitlist - See Demo
                   </Button>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-md mx-auto lg:mx-0">
-                  <Button 
-                    className="flex-1 bg-violet-700/40 hover:bg-violet-700/60 border border-violet-700/40" 
-                    onClick={() => (window.location.href = "/register")}
-                  >
-                    🚀 Start Free Trial
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 border-slate-700 text-white hover:bg-slate-800/60" 
-                    onClick={() => (window.location.href = "/demo")}
-                  >
-                    🌠 Book a Demo
-                  </Button>
-                </div>
-              </form>
+                </Link>
+              </div>
 
               <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-slate-400 text-center lg:text-left">
                 Built for South African Property Pros — professional tools designed for local hosts and agencies.
@@ -291,6 +247,102 @@ const LandingPage = () => {
                 </div>
               </div>
             </motion.div>
+          </div>
+        </div>
+      </section>
+    );
+  };
+
+  // Demo Section Component
+  const DemoSection = () => {
+    return (
+      <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-[#0E0E12] to-[#0A0A0A]">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <Badge className="bg-violet-700/70 text-white border border-violet-700/50 mb-4">How It Works</Badge>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 sm:mb-6">
+              See PropNova in Action
+            </h2>
+            <p className="text-slate-300 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto">
+              Three simple steps to transform your property management workflow
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+            {/* Step 1 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-center"
+            >
+              <div className="relative mb-6">
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-violet-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(124,58,237,.3)]">
+                  <PlugZap className="h-10 w-10 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center text-white font-bold text-sm">1</div>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Connect & Sync</h3>
+              <p className="text-slate-300 text-sm sm:text-base">
+                Link your Airbnb, Booking.com, and VRBO accounts in under 2 minutes. Watch as all your calendars sync automatically.
+              </p>
+            </motion.div>
+
+            {/* Step 2 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-center"
+            >
+              <div className="relative mb-6">
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-600 to-cyan-700 rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,.3)]">
+                  <MessageCircle className="h-10 w-10 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">2</div>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Automate Everything</h3>
+              <p className="text-slate-300 text-sm sm:text-base">
+                Set up smart messaging templates and workflows. PropNova handles check-ins, house rules, and follow-ups automatically.
+              </p>
+            </motion.div>
+
+            {/* Step 3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="text-center"
+            >
+              <div className="relative mb-6">
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-600 to-emerald-700 rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(34,197,94,.3)]">
+                  <BarChart3 className="h-10 w-10 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">3</div>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Scale & Grow</h3>
+              <p className="text-slate-300 text-sm sm:text-base">
+                Monitor performance, get insights, and scale your property portfolio with confidence. More properties, less work.
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Demo Video Placeholder */}
+          <div className="mt-12 sm:mt-16 max-w-4xl mx-auto">
+            <Card className="bg-[#0B0B0E] border border-violet-900/40 overflow-hidden">
+              <CardContent className="p-0">
+                <div className="aspect-video w-full bg-gradient-to-br from-[#0E0E12] to-[#141424] relative flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-20 h-20 mx-auto bg-violet-600/20 rounded-full flex items-center justify-center mb-4">
+                      <Monitor className="h-10 w-10 text-violet-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">Interactive Demo</h3>
+                    <p className="text-slate-300 mb-4">Watch PropNova in action (Available at launch)</p>
+                    <Badge className="bg-violet-700/70 text-white border border-violet-500/40">Coming September 11</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
@@ -552,12 +604,10 @@ const LandingPage = () => {
 
   // FAQ Component
   const FAQ = () => {
-    const [openFaq, setOpenFaq] = useState(null);
-    
     const faqs = [
       {
         question: "How does calendar sync work?",
-        answer: "Our calendar sync works like gravity—automatically and reliably. Connect your Airbnb, Booking.com, and VRBO accounts, and PropNova keeps all calendars perfectly aligned in real-time."
+        answer: "Our calendar sync works automatically and reliably. Connect your Airbnb, Booking.com, and VRBO accounts, and PropNova keeps all calendars perfectly aligned in real-time."
       },
       {
         question: "Is Payfast integration included?",
@@ -568,8 +618,8 @@ const LandingPage = () => {
         answer: "Setup takes about 5 minutes. Connect your accounts, customize your messaging templates, and you're ready to automate your property management."
       },
       {
-        question: "What happens after the free trial?",
-        answer: "After your 14-day trial, choose the Growth plan (R199/month) or continue with our free tier (up to 2 properties with basic features)."
+        question: "What happens after launch?",
+        answer: "Waitlist members get 50% off their first year, priority onboarding support, and exclusive access to beta features."
       },
       {
         question: "Can I cancel anytime?",
@@ -578,8 +628,8 @@ const LandingPage = () => {
     ];
 
     return (
-      <section className="py-14 md:py-20 bg-[#0A0A0A]">
-        <div className="container max-w-4xl mx-auto px-4">
+      <section className="py-14 md:py-20 bg-black">
+        <div className="container max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
               Frequently Asked Questions
@@ -589,27 +639,27 @@ const LandingPage = () => {
             </p>
           </div>
 
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <Card key={index} className="bg-[#0B0B0E] border border-slate-800">
-                <CardContent className="p-0">
-                  <button
-                    className="w-full p-6 text-left flex items-center justify-between hover:bg-slate-800/20 transition-colors"
-                    onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  >
-                    <span className="font-semibold text-white">{faq.question}</span>
-                    <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${
-                      openFaq === index ? 'rotate-180' : ''
-                    }`} />
-                  </button>
-                  {openFaq === index && (
-                    <div className="px-6 pb-6">
-                      <p className="text-slate-300">{faq.answer}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-violet-900/40">
+                  <th className="text-left py-6 px-6 text-violet-400 font-semibold text-lg">Question</th>
+                  <th className="text-left py-6 px-6 text-violet-400 font-semibold text-lg">Answer</th>
+                </tr>
+              </thead>
+              <tbody>
+                {faqs.map((faq, index) => (
+                  <tr key={index} className="border-b border-slate-800 hover:bg-slate-900/20 transition-colors">
+                    <td className="py-6 px-6 text-white font-medium align-top w-1/3">
+                      {faq.question}
+                    </td>
+                    <td className="py-6 px-6 text-slate-300 align-top">
+                      {faq.answer}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -661,9 +711,10 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white starfield" style={{ backgroundColor: '#0A0A0A' }}>
+    <div className="min-h-screen w-full bg-[#0A0A0A] text-white starfield overflow-x-hidden" style={{ backgroundColor: '#0A0A0A' }}>
       <Header />
       <Hero />
+      <DemoSection />
       <BuiltForSA />
       <Features />
       <TimeSavings />

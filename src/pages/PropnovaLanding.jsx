@@ -29,20 +29,74 @@ const PropnovaLanding = () => {
     setIsSubmitting(true);
     
     try {
-      const url = `${import.meta.env.VITE_API_URL || "https://propstream-api.onrender.com"}/api/newsletter/subscribe`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ email, source: "landing" })
+      // Send email using Resend API
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Propnova <noreply@propnova.co.za>',
+          to: [email],
+          subject: '🚀 Welcome to the Propnova Waitlist - Launching in 7 Days!',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #7c3aed; margin-bottom: 10px;">Welcome to Propnova!</h1>
+                <p style="font-size: 18px; color: #666;">You're officially on the waitlist 🎉</p>
+              </div>
+              
+              <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
+                <h2 style="margin: 0 0 10px 0;">Launching in 7 Days!</h2>
+                <p style="margin: 0; opacity: 0.9;">Be ready for the future of property management</p>
+              </div>
+              
+              <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #334155; margin-top: 0;">What to expect:</h3>
+                <ul style="color: #64748b; line-height: 1.6;">
+                  <li>✅ Unified calendar sync across all platforms</li>
+                  <li>✅ Automated guest messaging templates</li>
+                  <li>✅ Payfast integration for South African hosts</li>
+                  <li>✅ 5-minute setup process</li>
+                  <li>✅ Mobile-first design</li>
+                </ul>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <p style="color: #666; margin-bottom: 20px;">We'll send you exclusive early access when we launch!</p>
+                <a href="https://propnova.co.za" style="background: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Visit Our Website</a>
+              </div>
+              
+              <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center; color: #94a3b8; font-size: 14px;">
+                <p>Best regards,<br>The Propnova Team</p>
+                <p>Unified property operations for South African hosts & agencies</p>
+              </div>
+            </div>
+          `,
+        }),
       });
-      
+
       if (response.ok) {
-        alert("🎉 You're on the list! Check your inbox for confirmation. We'll notify you when Propnova launches!");
+        alert("🎉 You're on the waitlist! Check your inbox for confirmation. We'll notify you when Propnova launches in 7 days!");
         setEmail('');
+        
+        // Also save to your existing newsletter API if needed
+        try {
+          const newsletterUrl = `${import.meta.env.VITE_API_BASE_URL || "https://propstream-api.onrender.com/api"}/newsletter/subscribe`;
+          await fetch(newsletterUrl, {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ email, source: "waitlist" })
+          });
+        } catch (err) {
+          console.log('Newsletter signup failed but email sent successfully');
+        }
       } else {
-        alert("Could not join the waitlist. Please try again.");
+        throw new Error('Failed to send email');
       }
     } catch (error) {
+      console.error('Waitlist signup error:', error);
       alert("Could not join the waitlist. Please try again.");
     }
     
@@ -63,20 +117,13 @@ const PropnovaLanding = () => {
           
           <nav className="hidden md:flex items-center space-x-6">
             <a href="#features" className="text-gray-600 hover:text-violet-600 transition-colors">Features</a>
-            <a href="#pricing" className="text-gray-600 hover:text-violet-600 transition-colors">Pricing</a>
+            <a href="#demo" className="text-gray-600 hover:text-violet-600 transition-colors">Demo</a>
             <a href="#faq" className="text-gray-600 hover:text-violet-600 transition-colors">FAQ</a>
             <Button 
-              variant="ghost" 
-              onClick={() => window.location.href = '/login'}
-              className="text-gray-600 hover:text-violet-600"
-            >
-              Sign In
-            </Button>
-            <Button 
-              onClick={() => window.location.href = '/register'}
+              onClick={() => document.getElementById('waitlist').scrollIntoView({ behavior: 'smooth' })}
               className="bg-violet-600 hover:bg-violet-700"
             >
-              Start Free Trial
+              Join Waitlist
             </Button>
           </nav>
         </div>
@@ -92,7 +139,7 @@ const PropnovaLanding = () => {
           >
             <Badge variant="secondary" className="mb-6 bg-violet-100 text-violet-700 border-violet-200">
               <Sparkles className="w-4 h-4 mr-2" />
-              Coming Soon
+              Launching in 7 Days
             </Badge>
             
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
@@ -101,13 +148,13 @@ const PropnovaLanding = () => {
             </h1>
             
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Propnova unifies listings, calendar, and messaging—so Durban hosts & small agencies work smarter, not harder.
+              Propnova unifies listings, calendar, and messaging—so South African hosts & agencies work smarter, not harder.
             </p>
 
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               <div className="flex items-center text-gray-600">
                 <Shield className="w-5 h-5 text-violet-600 mr-2" />
-                Secure
+                Secure & Reliable
               </div>
               <div className="flex items-center text-gray-600">
                 <Clock className="w-5 h-5 text-violet-600 mr-2" />
@@ -119,7 +166,7 @@ const PropnovaLanding = () => {
               </div>
             </div>
 
-            <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto mb-6">
+            <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto mb-6" id="waitlist">
               <Input
                 type="email"
                 required
@@ -138,22 +185,19 @@ const PropnovaLanding = () => {
               </Button>
             </form>
 
+            <p className="text-sm text-gray-500 mb-8">
+              🚀 Be the first to know when Propnova launches! Get exclusive early access.
+            </p>
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 size="lg"
-                onClick={() => window.location.href = '/register'}
-                className="bg-violet-600 hover:bg-violet-700"
-              >
-                Start Free Trial
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-              <Button 
-                size="lg"
                 variant="outline"
-                onClick={() => window.location.href = '/demo'}
+                onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}
                 className="border-violet-200 text-violet-600 hover:bg-violet-50"
               >
-                Book a Demo
+                View Demo
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </motion.div>
@@ -161,13 +205,67 @@ const PropnovaLanding = () => {
       </section>
 
       {/* Visual Gallery */}
-      <section className="py-16 bg-white">
+      <section id="demo" className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Built for South African Property Pros</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">Professional tools that actually work for local hosts and agencies</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">See Propnova in Action</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">Get a preview of how Propnova will transform your property management workflow</p>
           </div>
           
+          {/* Demo Dashboard Mockup */}
+          <div className="max-w-6xl mx-auto mb-16">
+            <Card className="border-violet-100 overflow-hidden">
+              <CardContent className="p-0">
+                <div className="bg-gradient-to-br from-violet-600 to-purple-700 text-white p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <BarChart3 className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold">Propnova Dashboard</h3>
+                        <p className="text-violet-100">All your properties at a glance</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-white/20 text-white border-white/30">
+                      Live Demo
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white/10 rounded-lg p-4 backdrop-blur">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <Calendar className="w-5 h-5 text-violet-200" />
+                        <span className="font-semibold">Calendar Sync</span>
+                      </div>
+                      <div className="text-2xl font-bold mb-1">3 Properties</div>
+                      <div className="text-violet-200 text-sm">Synced across all platforms</div>
+                    </div>
+                    
+                    <div className="bg-white/10 rounded-lg p-4 backdrop-blur">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <MessageSquare className="w-5 h-5 text-violet-200" />
+                        <span className="font-semibold">Messages</span>
+                      </div>
+                      <div className="text-2xl font-bold mb-1">12 Automated</div>
+                      <div className="text-violet-200 text-sm">Templates sent this week</div>
+                    </div>
+                    
+                    <div className="bg-white/10 rounded-lg p-4 backdrop-blur">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <Users className="w-5 h-5 text-violet-200" />
+                        <span className="font-semibold">Bookings</span>
+                      </div>
+                      <div className="text-2xl font-bold mb-1">8 Active</div>
+                      <div className="text-violet-200 text-sm">No conflicts detected</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Feature Mockups */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -175,17 +273,29 @@ const PropnovaLanding = () => {
               transition={{ duration: 0.5 }}
               className="relative overflow-hidden rounded-2xl"
             >
-              <img
-                src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Modern property management dashboard"
-                className="w-full h-64 object-cover"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-violet-900/20"></div>
-              <div className="absolute bottom-4 left-4 right-4">
-                <h3 className="text-white font-semibold text-lg">Unified Dashboard</h3>
-                <p className="text-white/90 text-sm">All your properties in one view</p>
-              </div>
+              <Card className="border-violet-100 h-full">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-violet-100 rounded-lg flex items-center justify-center mb-4">
+                    <Calendar className="w-6 h-6 text-violet-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Unified Calendar View</h3>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-between p-2 bg-green-50 rounded border-l-4 border-green-500">
+                      <span className="text-sm text-gray-600">Airbnb Booking</span>
+                      <span className="text-xs text-green-600">Confirmed</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-blue-50 rounded border-l-4 border-blue-500">
+                      <span className="text-sm text-gray-600">Booking.com</span>
+                      <span className="text-xs text-blue-600">Synced</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-purple-50 rounded border-l-4 border-purple-500">
+                      <span className="text-sm text-gray-600">VRBO Inquiry</span>
+                      <span className="text-xs text-purple-600">Pending</span>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm">All platforms synced in real-time</p>
+                </CardContent>
+              </Card>
             </motion.div>
 
             <motion.div
@@ -194,17 +304,27 @@ const PropnovaLanding = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="relative overflow-hidden rounded-2xl"
             >
-              <img
-                src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Beautiful Cape Town property listing"
-                className="w-full h-64 object-cover"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-violet-900/20"></div>
-              <div className="absolute bottom-4 left-4 right-4">
-                <h3 className="text-white font-semibold text-lg">Smart Calendar</h3>
-                <p className="text-white/90 text-sm">No more double bookings</p>
-              </div>
+              <Card className="border-violet-100 h-full">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-violet-100 rounded-lg flex items-center justify-center mb-4">
+                    <MessageSquare className="w-6 h-6 text-violet-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Smart Messaging</h3>
+                  <div className="space-y-3 mb-4">
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Welcome Message</div>
+                      <div className="text-sm text-gray-700">"Hi! Welcome to Cape Town..."</div>
+                      <div className="text-xs text-green-600 mt-1">✓ Sent automatically</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Check-in Instructions</div>
+                      <div className="text-sm text-gray-700">"Your keypad code is..."</div>
+                      <div className="text-xs text-blue-600 mt-1">⏰ Scheduled for 3pm</div>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm">Automated templates in multiple languages</p>
+                </CardContent>
+              </Card>
             </motion.div>
 
             <motion.div
@@ -213,17 +333,27 @@ const PropnovaLanding = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="relative overflow-hidden rounded-2xl"
             >
-              <img
-                src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Guest messaging and communication"
-                className="w-full h-64 object-cover"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-violet-900/20"></div>
-              <div className="absolute bottom-4 left-4 right-4">
-                <h3 className="text-white font-semibold text-lg">Auto Messaging</h3>
-                <p className="text-white/90 text-sm">Templates that convert</p>
-              </div>
+              <Card className="border-violet-100 h-full">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-violet-100 rounded-lg flex items-center justify-center mb-4">
+                    <Smartphone className="w-6 h-6 text-violet-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Mobile Ready</h3>
+                  <div className="bg-gradient-to-b from-gray-100 to-gray-200 rounded-lg p-4 mb-4">
+                    <div className="bg-white rounded shadow-sm p-3 mb-2">
+                      <div className="h-2 bg-violet-200 rounded mb-2"></div>
+                      <div className="h-1 bg-gray-200 rounded mb-1"></div>
+                      <div className="h-1 bg-gray-200 rounded w-3/4"></div>
+                    </div>
+                    <div className="bg-white rounded shadow-sm p-3">
+                      <div className="h-2 bg-green-200 rounded mb-2"></div>
+                      <div className="h-1 bg-gray-200 rounded mb-1"></div>
+                      <div className="h-1 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm">Manage everything on the go</p>
+                </CardContent>
+              </Card>
             </motion.div>
           </div>
         </div>
@@ -413,154 +543,64 @@ const PropnovaLanding = () => {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-20 bg-gradient-to-b from-violet-50 to-white">
+      {/* Waitlist CTA */}
+      <section className="py-20 bg-gradient-to-b from-violet-50 to-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Simple, transparent pricing</h2>
-            <p className="text-xl text-gray-600">Start free, scale as you grow</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Card className="border-violet-100 relative h-full">
-                <CardHeader>
-                  <CardTitle className="text-xl">Starter</CardTitle>
-                  <CardDescription>Perfect for individual hosts</CardDescription>
-                  <div className="mt-4">
-                    <span className="text-3xl font-bold">Free</span>
-                    <span className="text-gray-600"> for 14 days</span>
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Ready to Transform Your Property Management?</h2>
+            <p className="text-xl text-gray-600 mb-8">Join thousands of South African hosts preparing for launch</p>
+            
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-violet-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Clock className="w-8 h-8 text-violet-600" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Up to 2 properties
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Basic calendar sync
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Message templates
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Email support
-                    </li>
-                  </ul>
-                  <Button 
-                    className="w-full bg-violet-600 hover:bg-violet-700"
-                    onClick={() => window.location.href = '/register'}
-                  >
-                    Start Free Trial
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Card className="border-violet-200 relative h-full shadow-lg">
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-violet-600">
-                  Most Popular
-                </Badge>
-                <CardHeader>
-                  <CardTitle className="text-xl">Growth</CardTitle>
-                  <CardDescription>For growing property portfolios</CardDescription>
-                  <div className="mt-4">
-                    <span className="text-3xl font-bold">R199</span>
-                    <span className="text-gray-600">/month</span>
+                  <h3 className="font-semibold text-gray-900 mb-2">Save 5+ Hours Weekly</h3>
+                  <p className="text-gray-600 text-sm">Automate repetitive tasks and focus on hosting</p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Shield className="w-8 h-8 text-violet-600" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Up to 10 properties
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Advanced automations
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Analytics & reports
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Priority support
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Make/Zapier integration
-                    </li>
-                  </ul>
-                  <Button 
-                    className="w-full bg-violet-600 hover:bg-violet-700"
-                    onClick={() => window.location.href = '/billing'}
-                  >
-                    Start Growth Plan
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card className="border-violet-100 relative h-full">
-                <CardHeader>
-                  <CardTitle className="text-xl">Agency</CardTitle>
-                  <CardDescription>For property management companies</CardDescription>
-                  <div className="mt-4">
-                    <span className="text-3xl font-bold">Custom</span>
+                  <h3 className="font-semibold text-gray-900 mb-2">100% Secure</h3>
+                  <p className="text-gray-600 text-sm">Bank-level security for your property data</p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Zap className="w-8 h-8 text-violet-600" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Unlimited properties
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      White-label options
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Custom integrations
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      Dedicated support
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
-                      SLA guarantee
-                    </li>
-                  </ul>
+                  <h3 className="font-semibold text-gray-900 mb-2">Lightning Fast</h3>
+                  <p className="text-gray-600 text-sm">5-minute setup, instant results</p>
+                </div>
+              </div>
+              
+              <div className="max-w-md mx-auto">
+                <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row gap-4">
+                  <Input
+                    type="email"
+                    required
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1"
+                    disabled={isSubmitting}
+                  />
                   <Button 
-                    variant="outline"
-                    className="w-full border-violet-200 text-violet-600 hover:bg-violet-50"
-                    onClick={() => window.location.href = '/contact'}
+                    type="submit" 
+                    className="bg-violet-600 hover:bg-violet-700"
+                    disabled={isSubmitting}
                   >
-                    Contact Sales
+                    {isSubmitting ? 'Joining...' : 'Get Early Access'}
                   </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
+                </form>
+                <p className="text-sm text-gray-500 mt-3">
+                  🚀 Launching in 7 days • No spam, ever • Unsubscribe anytime
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -569,42 +609,82 @@ const PropnovaLanding = () => {
       <section id="faq" className="py-20 bg-black">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Frequently asked questions</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Frequently Asked Questions</h2>
             <p className="text-xl text-gray-300">Everything you need to know about Propnova</p>
           </div>
 
-          <div className="max-w-3xl mx-auto space-y-6">
-            <div className="bg-black border border-gray-700 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-3">How does the calendar sync work?</h3>
-              <p className="text-gray-300">
-                Propnova connects directly with Airbnb, Booking.com, VRBO, and other platforms using their official APIs. 
-                When a booking comes in on any platform, it automatically blocks those dates across all your other listings. 
-                No more manual updates or double bookings.
-              </p>
-            </div>
-
-            <div className="bg-black border border-gray-700 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-3">Is Payfast integration included?</h3>
-              <p className="text-gray-300">
-                Yes! We have full Payfast integration ready to go, plus Stripe for international guests. 
-                Set up secure payments in under 5 minutes with our South African-optimized checkout flow.
-              </p>
-            </div>
-
-            <div className="bg-black border border-gray-700 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-3">Can I really set this up in 5 minutes?</h3>
-              <p className="text-gray-300">
-                Absolutely. Connect your first property, sync one calendar, and set up basic messaging templates in under 5 minutes. 
-                Advanced features and automations can be added as you grow.
-              </p>
-            </div>
-
-            <div className="bg-black border border-gray-700 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-3">What happens after the 14-day trial?</h3>
-              <p className="text-gray-300">
-                You can continue with our Growth plan (R199/month) or downgrade to our limited free tier. 
-                No credit card required for the trial, and you can cancel anytime with no questions asked.
-              </p>
+          <div className="max-w-5xl mx-auto">
+            <div className="overflow-hidden rounded-lg border border-gray-700">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-800 border-b border-gray-700">
+                    <th className="text-left py-4 px-6 text-violet-400 font-semibold text-lg">Question</th>
+                    <th className="text-left py-4 px-6 text-violet-400 font-semibold text-lg">Answer</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-gray-700">
+                    <td className="py-6 px-6 text-white font-medium align-top w-1/3">
+                      How does the calendar sync work?
+                    </td>
+                    <td className="py-6 px-6 text-gray-300">
+                      Propnova connects directly with Airbnb, Booking.com, VRBO, and other platforms using their official APIs. 
+                      When a booking comes in on any platform, it automatically blocks those dates across all your other listings. 
+                      No more manual updates or double bookings.
+                    </td>
+                  </tr>
+                  
+                  <tr className="border-b border-gray-700">
+                    <td className="py-6 px-6 text-white font-medium align-top w-1/3">
+                      Is Payfast integration included?
+                    </td>
+                    <td className="py-6 px-6 text-gray-300">
+                      Yes! We have full Payfast integration ready to go, plus Stripe for international guests. 
+                      Set up secure payments in under 5 minutes with our South African-optimized checkout flow.
+                    </td>
+                  </tr>
+                  
+                  <tr className="border-b border-gray-700">
+                    <td className="py-6 px-6 text-white font-medium align-top w-1/3">
+                      Can I really set this up in 5 minutes?
+                    </td>
+                    <td className="py-6 px-6 text-gray-300">
+                      Absolutely. Connect your first property, sync one calendar, and set up basic messaging templates in under 5 minutes. 
+                      Advanced features and automations can be added as you grow.
+                    </td>
+                  </tr>
+                  
+                  <tr className="border-b border-gray-700">
+                    <td className="py-6 px-6 text-white font-medium align-top w-1/3">
+                      When will Propnova be available?
+                    </td>
+                    <td className="py-6 px-6 text-gray-300">
+                      Propnova launches in 7 days! Join our waitlist to get exclusive early access and be among the first to experience 
+                      the future of property management. We'll send you login details as soon as we go live.
+                    </td>
+                  </tr>
+                  
+                  <tr className="border-b border-gray-700">
+                    <td className="py-6 px-6 text-white font-medium align-top w-1/3">
+                      What platforms do you support?
+                    </td>
+                    <td className="py-6 px-6 text-gray-300">
+                      We support all major booking platforms including Airbnb, Booking.com, VRBO, Agoda, and more. 
+                      Our system automatically syncs calendars, manages bookings, and sends automated messages across all platforms.
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td className="py-6 px-6 text-white font-medium align-top w-1/3">
+                      Is my data secure?
+                    </td>
+                    <td className="py-6 px-6 text-gray-300">
+                      Absolutely. We use bank-level encryption and security protocols. Your property and guest data is stored securely 
+                      in South African data centers, and we're fully POPIA compliant. We never share your data with third parties.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

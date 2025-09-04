@@ -65,12 +65,23 @@
   * {
     @apply border-border;
   }
+  html {
+    @apply bg-[#0A0A0A];
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
   body {
     @apply bg-[#0A0A0A] text-white;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
   }
-  html {
+  #root {
     @apply bg-[#0A0A0A];
+    min-height: 100vh;
+    overflow-x: hidden;
   }
 }
 
@@ -125,10 +136,12 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  padding: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #0A0A0A;
+  color: white;
+  overflow-x: hidden;
 }
 
 h1 {
