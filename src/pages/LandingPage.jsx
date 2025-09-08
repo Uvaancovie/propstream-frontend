@@ -71,38 +71,58 @@ const Hero = ({ email, isSubmitted, isSubmitting, handleEmailChange, handleSubmi
             {/* Waitlist Form */}
             <div id="waitlist-form" className="mt-6 sm:mt-8 space-y-3">
               {!isSubmitted ? (
-                <form key="waitlist-form" onSubmit={handleSubmit} className="max-w-md mx-auto lg:mx-0">
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input 
-                      ref={inputRef}
-                      type="email" 
-                      required 
-                      value={email}
-                      onChange={handleEmailChange}
-                      placeholder="Enter your email for exclusive early access" 
-                      className="flex-1 bg-[#0F0F13] border border-slate-700 text-white placeholder:text-slate-500 text-lg h-12 px-4 rounded-md outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500" 
-                      disabled={isSubmitting}
-                      autoComplete="email"
-                      autoFocus={false}
-                    />
-                    <Button 
-                      type="submit" 
-                      className="bg-violet-600 hover:bg-violet-700 whitespace-nowrap h-12 px-8 text-lg font-semibold"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <CloudLightning className="h-5 w-5 mr-2 animate-spin" />
-                          Joining...
-                        </>
-                      ) : (
-                        <>
-                          🚀 Join Waitlist
-                        </>
-                      )}
-                    </Button>
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-center lg:justify-start gap-3">
+                    <Link to="/register" className="sm:w-auto">
+                      <Button 
+                        className="bg-violet-600 hover:bg-violet-700 w-full sm:w-auto whitespace-nowrap h-12 px-8 text-lg font-semibold"
+                      >
+                        Get Started
+                      </Button>
+                    </Link>
+                    <Link to="/login" className="sm:w-auto">
+                      <Button 
+                        variant="outline"
+                        className="border-violet-600/40 hover:border-violet-600 w-full sm:w-auto text-white whitespace-nowrap h-12 px-8 text-lg font-semibold"
+                      >
+                        Login
+                      </Button>
+                    </Link>
                   </div>
-                </form>
+                  <p className="text-slate-300 text-center lg:text-left">or join our waitlist:</p>
+                  <form key="waitlist-form" onSubmit={handleSubmit} className="max-w-md mx-auto lg:mx-0">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <input 
+                        ref={inputRef}
+                        type="email" 
+                        required 
+                        value={email}
+                        onChange={handleEmailChange}
+                        placeholder="Enter your email for exclusive early access" 
+                        className="flex-1 bg-[#0F0F13] border border-slate-700 text-white placeholder:text-slate-500 text-lg h-12 px-4 rounded-md outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500" 
+                        disabled={isSubmitting}
+                        autoComplete="email"
+                        autoFocus={false}
+                      />
+                      <Button 
+                        type="submit" 
+                        className="bg-violet-600/30 hover:bg-violet-600/40 whitespace-nowrap h-12 px-8 text-lg font-semibold"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <CloudLightning className="h-5 w-5 mr-2 animate-spin" />
+                            Joining...
+                          </>
+                        ) : (
+                          <>
+                            Join Waitlist
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </div>
               ) : (
                 <div className="bg-green-600/20 border border-green-500/40 rounded-xl p-6 max-w-md mx-auto lg:mx-0">
                   <CheckCircle className="h-12 w-12 text-green-400 mx-auto lg:mx-0 mb-4" />
@@ -242,49 +262,70 @@ const LandingPage = () => {
     setIsSubmitting(true);
 
     try {
-      // Try to store in Supabase first
-      const { data, error } = await supabase
-        .from('waitlist')
-        .insert([
-          {
-            email: email,
-            source: 'landing_page',
-            created_at: new Date().toISOString()
-          }
-        ])
-        .select();
-
-      if (error) {
-        console.error('Supabase error:', error);
-        // Fall back to API if Supabase fails
-        throw new Error('Supabase failed, trying API');
-      }
-
-      console.log('✅ Successfully stored in Supabase:', data);
+      // Import waitlistAPI from services
+      const { waitlistAPI } = await import('../services/api');
+      
+      // Use the new waitlistAPI service
+      const response = await waitlistAPI.join({
+        email,
+        source: 'landing_page'
+      });
+      
+      console.log('✅ Successfully joined waitlist:', response);
       setIsSubmitted(true);
       setEmail('');
-
-    } catch (supabaseError) {
-      console.log('Falling back to API...');
       
-      // Fallback to original API
+    } catch (error) {
+      console.error('Waitlist API error:', error);
+      
+      // Fallback to Supabase if API fails
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api"}/waitlist`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, source: "landing_page" }),
-        });
-
-        const data = await response.json();
+        console.log('Falling back to Supabase...');
         
-        if (response.ok) {
+        // First check if email already exists
+        const { data: existingData } = await supabase
+          .from('waitlist')
+          .select('email')
+          .eq('email', email)
+          .single();
+          
+        if (existingData) {
+          console.log('Email already exists in waitlist:', existingData);
+          // Email exists but we'll treat it as success
           setIsSubmitted(true);
           setEmail('');
-        } else {
-          alert(data.message || "Could not join the waitlist. Try again.");
+          return;
         }
-      } catch (error) {
-        console.error('Both Supabase and API failed:', error);
+        
+        const { data, error } = await supabase
+          .from('waitlist')
+          .insert([
+            {
+              email: email,
+              source: 'landing_page',
+              created_at: new Date().toISOString()
+            }
+          ])
+          .select();
+
+        if (error) {
+          // If still getting duplicate key error, treat as success
+          if (error.code === '23505') { // Duplicate key violation
+            console.log('Email already exists in waitlist (race condition)');
+            setIsSubmitted(true);
+            setEmail('');
+            return;
+          }
+          console.error('Supabase error:', error);
+          alert("Could not join the waitlist. Try again later.");
+          return;
+        }
+
+        console.log('✅ Successfully stored in Supabase:', data);
+        setIsSubmitted(true);
+        setEmail('');
+      } catch (supabaseError) {
+        console.error('Both API and Supabase failed:', supabaseError);
         alert("Network error. Please try again or contact us directly.");
       }
     } finally {
@@ -317,9 +358,24 @@ const LandingPage = () => {
             </nav>
             
             <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
+              <Link to="/login">
+                <Button 
+                  variant="outline"
+                  className="border-violet-600/40 hover:border-violet-600 text-white text-sm lg:text-base px-3 lg:px-4"
+                >
+                  Login
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button 
+                  className="bg-violet-600 hover:bg-violet-700 shadow-[0_0_24px_rgba(124,58,237,.35)] text-sm lg:text-base px-3 lg:px-4"
+                >
+                  Get Started
+                </Button>
+              </Link>
               <Button 
                 onClick={() => document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-violet-600 hover:bg-violet-700 shadow-[0_0_24px_rgba(124,58,237,.35)] text-sm lg:text-base px-3 lg:px-4"
+                className="bg-violet-600/20 hover:bg-violet-600/30 text-sm lg:text-base px-3 lg:px-4"
               >
                 ✨ Join Waitlist
               </Button>
@@ -341,12 +397,27 @@ const LandingPage = () => {
                 <Link to="/about" className="text-slate-400 hover:text-white transition-colors py-2">About</Link>
                 <Link to="/contact" className="text-slate-400 hover:text-white transition-colors py-2">Contact</Link>
                 <div className="flex flex-col space-y-2 pt-3 border-t border-slate-800">
+                  <Link to="/login">
+                    <Button 
+                      variant="outline"
+                      className="border-violet-600/40 hover:border-violet-600 text-white justify-start py-3 w-full"
+                    >
+                      Login
+                    </Button>
+                  </Link>
+                  <Link to="/register">
+                    <Button 
+                      className="bg-violet-600 hover:bg-violet-700 justify-start py-3 w-full"
+                    >
+                      Get Started
+                    </Button>
+                  </Link>
                   <Button 
                     onClick={() => {
                       setIsMenuOpen(false);
                       document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="bg-violet-600 hover:bg-violet-700 justify-start py-3 w-full"
+                    className="bg-violet-600/20 hover:bg-violet-600/30 justify-start py-3 w-full"
                   >
                     ✨ Join Waitlist
                   </Button>
@@ -689,15 +760,17 @@ const LandingPage = () => {
                       ))}
                     </ul>
                     
-                    <Button 
-                      className={`w-full mt-auto text-sm sm:text-base ${
-                        plan.popular 
-                          ? 'bg-violet-600 hover:bg-violet-700' 
-                          : 'bg-violet-700/40 hover:bg-violet-700/60 border border-violet-700/40'
-                      }`}
-                    >
-                      {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
-                    </Button>
+                    <Link to="/register">
+                      <Button 
+                        className={`w-full mt-auto text-sm sm:text-base ${
+                          plan.popular 
+                            ? 'bg-violet-600 hover:bg-violet-700' 
+                            : 'bg-violet-700/40 hover:bg-violet-700/60 border border-violet-700/40'
+                        }`}
+                      >
+                        {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
               </motion.div>

@@ -44,49 +44,47 @@ const WaitlistPage = () => {
     setIsSubmitting(true);
 
     try {
-      // Try to store in Supabase first
-      const { data, error } = await supabase
-        .from('waitlist')
-        .insert([
-          {
-            email: email,
-            source: 'waitlist_page',
-            created_at: new Date().toISOString()
-          }
-        ])
-        .select();
-
-      if (error) {
-        console.error('Supabase error:', error);
-        // Fall back to API if Supabase fails
-        throw new Error('Supabase failed, trying API');
-      }
-
-      console.log('✅ Successfully stored in Supabase:', data);
+      // Import waitlistAPI from services
+      const { waitlistAPI } = await import('../services/api');
+      
+      // Use the new waitlistAPI service
+      const response = await waitlistAPI.join({
+        email,
+        source: 'waitlist_page'
+      });
+      
+      console.log('✅ Successfully joined waitlist:', response);
       setIsSubmitted(true);
       setEmail('');
-
-    } catch (supabaseError) {
-      console.log('Falling back to API...');
       
-      // Fallback to original API
+    } catch (error) {
+      console.error('Waitlist API error:', error);
+      
+      // Fallback to Supabase if API fails
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api"}/waitlist`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, source: "waitlist_page" }),
-        });
+        console.log('Falling back to Supabase...');
+        const { data, error } = await supabase
+          .from('waitlist')
+          .insert([
+            {
+              email: email,
+              source: 'waitlist_page',
+              created_at: new Date().toISOString()
+            }
+          ])
+          .select();
 
-        const data = await response.json();
-        
-        if (response.ok) {
-          setIsSubmitted(true);
-          setEmail('');
-        } else {
-          alert(data.message || "Could not join the waitlist. Try again.");
+        if (error) {
+          console.error('Supabase error:', error);
+          alert("Could not join the waitlist. Try again later.");
+          return;
         }
-      } catch (error) {
-        console.error('Both Supabase and API failed:', error);
+
+        console.log('✅ Successfully stored in Supabase:', data);
+        setIsSubmitted(true);
+        setEmail('');
+      } catch (supabaseError) {
+        console.error('Both API and Supabase failed:', supabaseError);
         alert("Network error. Please try again or contact us directly.");
       }
     } finally {

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import { api } from '../services/api';
+import { propertiesAPI, bookingsAPI } from '../services/api';
 import { seedDemoData, getPropertiesFromStorage } from '../utils/seedData';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { Button } from '../components/ui/button';
 import { 
   BuildingOfficeIcon, 
   CalendarDaysIcon, 
@@ -36,6 +37,52 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  // Welcome section component based on user role
+  const WelcomeSection = () => {
+    if (!user) return null;
+    
+    return (
+      <div className="bg-[#0B0B0E] p-6 rounded-lg shadow-lg border border-slate-800 mb-6">
+        <h2 className="text-2xl font-bold mb-2 text-white">Welcome, {user.name || user.email}!</h2>
+        <p className="text-slate-400 mb-4">
+          {user.role === 'realtor' 
+            ? 'Manage your properties, bookings, and clients from your dashboard.' 
+            : 'Browse properties, manage your bookings, and messages from your dashboard.'}
+        </p>
+        <div className="flex flex-wrap gap-3">
+          {user.role === 'realtor' && (
+            <>
+              <Link to="/properties/add">
+                <Button className="bg-violet-600 hover:bg-violet-700 text-white">
+                  Add New Property
+                </Button>
+              </Link>
+              <Link to="/calendar">
+                <Button className="bg-slate-700 hover:bg-slate-600 text-white">
+                  View Calendar
+                </Button>
+              </Link>
+            </>
+          )}
+          {user.role === 'client' && (
+            <>
+              <Link to="/browse-properties">
+                <Button className="bg-violet-600 hover:bg-violet-700 text-white">
+                  Browse Properties
+                </Button>
+              </Link>
+              <Link to="/bookings">
+                <Button className="bg-slate-700 hover:bg-slate-600 text-white">
+                  My Bookings
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Debug logging for loading states
   useEffect(() => {
     console.log('📊 Dashboard state:', { authLoading, loading, user: !!user });
@@ -67,8 +114,17 @@ const Dashboard = () => {
       
       // Try to get properties from API first
       try {
-        const propertiesRes = await api.get('/properties/public');
-        properties = propertiesRes.data.properties || [];
+        let propertiesData;
+        
+        if (user?.role === 'realtor') {
+          // For realtors, fetch their own properties
+          propertiesData = await propertiesAPI.getAll();
+        } else {
+          // For clients, fetch public properties
+          propertiesData = await propertiesAPI.getAllPublic();
+        }
+        
+        properties = propertiesData.properties || [];
         console.log('✅ Properties from API:', properties.length);
       } catch (apiError) {
         console.warn('⚠️ API failed, using localStorage:', apiError);
@@ -77,8 +133,19 @@ const Dashboard = () => {
         console.log('💾 Properties from localStorage:', properties.length);
       }
       
-      // Get bookings from localStorage for demo
-      const storedBookings = JSON.parse(localStorage.getItem('propstream_bookings') || '[]');
+      // Get bookings
+      let bookings = [];
+      try {
+        // Try to get bookings from API first
+        const bookingsData = await bookingsAPI.getAll();
+        bookings = bookingsData.bookings || [];
+        console.log('✅ Bookings from API:', bookings.length);
+      } catch (apiError) {
+        console.warn('⚠️ Bookings API failed, using localStorage:', apiError);
+        // Fallback to localStorage
+        const storedBookings = JSON.parse(localStorage.getItem('propstream_bookings') || '[]');
+        bookings = storedBookings;
+      }
       
       // Filter data based on user role
       let userBookings = [];
@@ -88,17 +155,17 @@ const Dashboard = () => {
         // Realtors see their own properties and bookings for their properties
         userProperties = properties.filter(p => 
           p.realtor_email === user.email || 
-          p.user_id === user.id
+          p.realtor_id === user.id
         );
-        userBookings = storedBookings.filter(b => 
-          b.realtorEmail === user.email ||
-          userProperties.some(p => p.id === b.propertyId)
+        userBookings = bookings.filter(b => 
+          b.realtor_email === user.email ||
+          userProperties.some(p => p.id === b.property_id || p._id === b.property_id)
         );
       } else {
         // Clients see all properties but only their own bookings
         userProperties = properties;
-        userBookings = storedBookings.filter(b => 
-          b.guestEmail === user.email
+        userBookings = bookings.filter(b => 
+          b.guest_email === user.email || b.user_id === user.id
         );
       }
       
@@ -108,8 +175,28 @@ const Dashboard = () => {
       // Calculate stats based on user role
       const totalProperties = user?.role === 'realtor' ? userProperties.length : properties.length;
       const activeBookings = userBookings.filter(b => b.status !== 'cancelled').length;
-      const totalGuests = userBookings.reduce((sum, booking) => sum + (booking.guests || 0), 0);
-      const monthlyRevenue = userBookings.reduce((sum, booking) => sum + (booking.totalAmount || 0), 0);
+      const totalGuests = userBookings.reduce((sum, booking) => {
+        const guests = booking.guests || booking.guest_count || 0;
+        return sum + parseInt(guests);
+      }, 0);
+      
+      // Calculate revenue with different possible field names
+      const totalRevenue = userBookings.reduce((sum, booking) => {
+        const amount = booking.total_amount || booking.totalAmount || booking.totalPrice || 0;
+        return sum + parseFloat(amount);
+      }, 0);
+      
+      // Calculate monthly revenue - bookings from current month
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const monthlyRevenue = userBookings.reduce((sum, booking) => {
+        const bookingDate = new Date(booking.createdAt || booking.created_at);
+        if (bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear) {
+          const amount = booking.total_amount || booking.totalAmount || booking.totalPrice || 0;
+          return sum + parseFloat(amount);
+        }
+        return sum;
+      }, 0);
       
       setDashboardData({
         properties: userProperties,
@@ -142,28 +229,28 @@ const Dashboard = () => {
       name: 'My Properties',
       value: dashboardData.totalProperties.toString(),
       icon: BuildingOfficeIcon,
-      color: 'bg-blue-500',
+      color: 'bg-violet-900/30 border-violet-800 text-violet-400',
       description: 'Properties you\'ve listed'
     },
     {
       name: 'Active Bookings',
       value: dashboardData.activeBookings.toString(),
       icon: CalendarDaysIcon,
-      color: 'bg-green-500',
+      color: 'bg-slate-800 border-slate-700 text-slate-300',
       description: 'Current and upcoming reservations'
     },
     {
       name: 'Total Revenue',
       value: `R${dashboardData.totalRevenue.toLocaleString()}`,
       icon: CurrencyDollarIcon,
-      color: 'bg-yellow-500',
+      color: 'bg-violet-900/30 border-violet-800 text-violet-400',
       description: 'Total earnings this month'
     },
     {
       name: 'Total Clients',
       value: dashboardData.totalGuests.toString(),
       icon: UserGroupIcon,
-      color: 'bg-purple-500',
+      color: 'bg-slate-800 border-slate-700 text-slate-300',
       description: 'Unique clients served'
     }
   ] : [
@@ -171,28 +258,28 @@ const Dashboard = () => {
       name: 'Available Properties',
       value: dashboardData.totalProperties.toString(),
       icon: BuildingOfficeIcon,
-      color: 'bg-blue-500',
+      color: 'bg-violet-900/30 border-violet-800 text-violet-400',
       description: 'Properties ready to book'
     },
     {
       name: 'My Bookings',
       value: dashboardData.activeBookings.toString(),
       icon: CalendarDaysIcon,
-      color: 'bg-green-500',
+      color: 'bg-slate-800 border-slate-700 text-slate-300',
       description: 'Your current reservations'
     },
     {
       name: 'Favorite Properties',
       value: '0',
       icon: CurrencyDollarIcon,
-      color: 'bg-purple-500',
+      color: 'bg-violet-900/30 border-violet-800 text-violet-400',
       description: 'Properties you\'ve saved'
     },
     {
       name: 'Reviews Given',
       value: '0',
       icon: UserGroupIcon,
-      color: 'bg-yellow-500',
+      color: 'bg-slate-800 border-slate-700 text-slate-300',
       description: 'Reviews you\'ve written'
     }
   ];
@@ -203,21 +290,21 @@ const Dashboard = () => {
       description: 'List a new rental property',
       href: '/properties/add',
       icon: BuildingOfficeIcon,
-      color: 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+      color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
     },
     {
       title: 'View Calendar',
       description: 'Check your booking calendar',
       href: '/calendar',
       icon: CalendarDaysIcon,
-      color: 'bg-green-50 text-green-600 hover:bg-green-100'
+      color: 'bg-violet-900/20 text-violet-400 hover:bg-violet-900/30 border border-violet-800/50'
     },
     {
       title: 'Manage Properties',
       description: 'Edit your property listings',
       href: '/properties',
       icon: ArrowTrendingUpIcon,
-      color: 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+      color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
     }
   ] : [
     {
@@ -225,35 +312,35 @@ const Dashboard = () => {
       description: 'Find your perfect stay',
       href: '/browse-properties',
       icon: BuildingOfficeIcon,
-      color: 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+      color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
     },
     {
       title: 'My Bookings',
       description: 'View your reservations',
       href: '/bookings',
       icon: CalendarDaysIcon,
-      color: 'bg-green-50 text-green-600 hover:bg-green-100'
+      color: 'bg-violet-900/20 text-violet-400 hover:bg-violet-900/30 border border-violet-800/50'
     },
     {
       title: 'Account Settings',
       description: 'Update your profile',
       href: '/billing',
       icon: ArrowTrendingUpIcon,
-      color: 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+      color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
     }
   ];
 
   const recentActivity = user?.role === 'realtor' ? [
     {
       type: 'info',
-      message: 'Welcome to Propstream! Start by adding your first property.',
+      message: 'Welcome to PropNova! Start by adding your first property.',
       time: 'Just now',
       icon: BuildingOfficeIcon
     }
   ] : [
     {
       type: 'info',
-      message: 'Welcome to Propstream! Start by browsing amazing properties.',
+      message: 'Welcome to PropNova! Start by browsing amazing properties.',
       time: 'Just now',
       icon: BuildingOfficeIcon
     }
@@ -314,10 +401,10 @@ const Dashboard = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Loading Dashboard...</h2>
-          <p className="text-gray-600">Please wait while we load your data.</p>
-          <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
-            <p className="text-yellow-800 text-sm">
+          <h2 className="text-2xl font-bold text-white mb-2">Loading Dashboard...</h2>
+          <p className="text-slate-400">Please wait while we load your data.</p>
+          <div className="mt-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+            <p className="text-slate-300 text-sm">
               Debug: authLoading={authLoading.toString()}, loading={loading.toString()}, user={user ? 'exists' : 'null'}
             </p>
             <button 
@@ -327,7 +414,7 @@ const Dashboard = () => {
                 localStorage.setItem('user', JSON.stringify(testUser));
                 window.location.reload();
               }}
-              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="mt-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-md transition-colors duration-200"
             >
               Set Test User (Debug)
             </button>
@@ -339,42 +426,25 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Welcome Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {user?.name || 'User'}! 👋
-        </h1>
-        <p className="mt-2 text-gray-600">
-          {user?.role === 'realtor' 
-            ? "Manage your properties and track your bookings." 
-            : "Browse amazing properties and book your next stay."
-          }
-        </p>
-        {!loading && dashboardData.totalProperties === 0 && (
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            <p className="text-blue-800">
-              🏠 Welcome to Propstream! We have {dashboardData.totalProperties || 7} properties available to explore.
-            </p>
-          </div>
-        )}
-      </div>
-
+      {/* Welcome Section */}
+      <WelcomeSection />
+      
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.name} className="card hover:shadow-md transition-shadow duration-200">
+            <div key={stat.name} className="bg-[#0B0B0E] border border-slate-800 p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
               <div className="flex items-center">
-                <div className={`flex-shrink-0 p-3 rounded-lg ${stat.color}`}>
-                  <Icon className="w-6 h-6 text-white" />
+                <div className={`flex-shrink-0 p-3 rounded-lg border ${stat.color}`}>
+                  <Icon className="w-6 h-6" />
                 </div>
                 <div className="ml-4 flex-1">
-                  <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-sm font-medium text-slate-400">{stat.name}</p>
+                  <p className="text-2xl font-bold text-white">{stat.value}</p>
                 </div>
               </div>
-              <p className="mt-3 text-sm text-gray-500">{stat.description}</p>
+              <p className="mt-3 text-sm text-slate-500">{stat.description}</p>
             </div>
           );
         })}
@@ -383,8 +453,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Quick Actions */}
         <div className="lg:col-span-2">
-          <div className="card">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
+          <div className="bg-[#0B0B0E] border border-slate-800 p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {quickActions.map((action) => {
                 const Icon = action.icon;
@@ -392,11 +462,11 @@ const Dashboard = () => {
                   <Link
                     key={action.title}
                     to={action.href}
-                    className={`p-4 rounded-lg border border-gray-200 transition-colors duration-200 ${action.color}`}
+                    className={`p-4 rounded-lg transition-colors duration-200 ${action.color}`}
                   >
                     <Icon className="w-8 h-8 mb-3" />
-                    <h3 className="font-semibold mb-1">{action.title}</h3>
-                    <p className="text-sm opacity-75">{action.description}</p>
+                    <h3 className="font-semibold mb-1 text-white">{action.title}</h3>
+                    <p className="text-sm text-slate-400">{action.description}</p>
                   </Link>
                 );
               })}
@@ -404,24 +474,24 @@ const Dashboard = () => {
           </div>
 
           {/* Getting Started Guide */}
-          <div className="card mt-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Getting Started</h2>
+          <div className="bg-[#0B0B0E] border border-slate-800 p-6 rounded-lg shadow-md mt-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Getting Started</h2>
             <div className="space-y-4">
               {gettingStartedSteps.map((step) => (
                 <div key={step.number} className="flex items-start space-x-3">
                   <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
                     step.completed 
-                      ? 'bg-green-100' 
+                      ? 'bg-violet-900/50 border border-violet-800' 
                       : step.number === 1 
-                        ? 'bg-primary-100' 
-                        : 'bg-gray-100'
+                        ? 'bg-violet-900/30 border border-violet-800' 
+                        : 'bg-slate-800 border border-slate-700'
                   }`}>
                     <span className={`text-xs font-semibold ${
                       step.completed 
-                        ? 'text-green-600' 
+                        ? 'text-violet-300' 
                         : step.number === 1 
-                          ? 'text-primary-600' 
-                          : 'text-gray-400'
+                          ? 'text-violet-400' 
+                          : 'text-slate-400'
                     }`}>
                       {step.number}
                     </span>
@@ -429,19 +499,19 @@ const Dashboard = () => {
                   <div>
                     <h3 className={`font-medium ${
                       step.completed 
-                        ? 'text-green-900' 
+                        ? 'text-violet-300' 
                         : step.number === 1 
-                          ? 'text-gray-900' 
-                          : 'text-gray-500'
+                          ? 'text-white' 
+                          : 'text-slate-400'
                     }`}>
                       {step.title}
                     </h3>
                     <p className={`text-sm ${
                       step.completed 
-                        ? 'text-green-600' 
+                        ? 'text-violet-400' 
                         : step.number === 1 
-                          ? 'text-gray-600' 
-                          : 'text-gray-500'
+                          ? 'text-slate-400' 
+                          : 'text-slate-500'
                     }`}>
                       {step.description}
                     </p>
@@ -454,21 +524,21 @@ const Dashboard = () => {
 
         {/* Recent Activity */}
         <div>
-          <div className="card">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Activity</h2>
+          <div className="bg-[#0B0B0E] border border-slate-800 p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold text-white mb-6">Recent Activity</h2>
             <div className="space-y-4">
               {recentActivity.map((activity, index) => {
                 const Icon = activity.icon;
                 return (
                   <div key={index} className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
-                      <Icon className="w-5 h-5 text-gray-400" />
+                      <Icon className="w-5 h-5 text-violet-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">{activity.message}</p>
+                      <p className="text-sm text-slate-300">{activity.message}</p>
                       <div className="flex items-center mt-1">
-                        <ClockIcon className="w-3 h-3 text-gray-400 mr-1" />
-                        <p className="text-xs text-gray-500">{activity.time}</p>
+                        <ClockIcon className="w-3 h-3 text-slate-500 mr-1" />
+                        <p className="text-xs text-slate-500">{activity.time}</p>
                       </div>
                     </div>
                   </div>
@@ -478,24 +548,24 @@ const Dashboard = () => {
           </div>
 
           {/* API Status */}
-          <div className="card mt-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">System Status</h2>
+          <div className="bg-[#0B0B0E] border border-slate-800 p-6 rounded-lg shadow-md mt-6">
+            <h2 className="text-xl font-semibold text-white mb-4">System Status</h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">API Connection</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span className="text-sm text-slate-400">API Connection</span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-900/30 border border-violet-800 text-violet-300">
                   Connected
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Database</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span className="text-sm text-slate-400">Database</span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-900/30 border border-violet-800 text-violet-300">
                   Online
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Calendar Sync</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                <span className="text-sm text-slate-400">Calendar Sync</span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 border border-slate-700 text-slate-300">
                   Setup Required
                 </span>
               </div>

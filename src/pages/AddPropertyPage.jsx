@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { addPropertyToStorage } from '../utils/seedData';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
+import { propertiesAPI } from '../services/api';
 import { 
   PhotoIcon,
   MapPinIcon,
@@ -20,9 +20,11 @@ const AddPropertyPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
+    name: '',
     description: '',
-    location: '',
+    address: '',
+    city: '',
+    province: '',
     price_per_night: '',
     bedrooms: '',
     bathrooms: '',
@@ -59,7 +61,7 @@ const AddPropertyPage = () => {
       return;
     }
 
-    if (!formData.title || !formData.location || !formData.price_per_night) {
+    if (!formData.name || !formData.address || !formData.city || !formData.price_per_night) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -74,6 +76,8 @@ const AddPropertyPage = () => {
         bedrooms: parseInt(formData.bedrooms) || 1,
         bathrooms: parseInt(formData.bathrooms) || 1,
         max_guests: parseInt(formData.max_guests) || 2,
+        amenities: formData.amenities.split(',').map(a => a.trim()).filter(a => a),
+        images: formData.image_url ? [formData.image_url] : [],
         is_available: true,
         realtor_id: user.id,
         realtor_name: user.name,
@@ -84,16 +88,16 @@ const AddPropertyPage = () => {
       console.log('🏠 Creating property:', propertyData);
       
       try {
-        // Try API first
-        const response = await api.post('/properties', propertyData);
-        console.log('✅ Property creation response:', response.data);
+        // Try API first using the propertiesAPI service
+        const response = await propertiesAPI.create(propertyData);
+        console.log('✅ Property creation response:', response);
         
-        if (response.data.success) {
+        if (response.success) {
           toast.success('Property added successfully!');
           navigate('/dashboard');
           return;
         } else {
-          throw new Error(response.data.message || 'Failed to add property');
+          throw new Error(response.message || 'Failed to add property');
         }
       } catch (apiError) {
         console.warn('API request failed, saving to localStorage:', apiError);
@@ -162,8 +166,8 @@ const AddPropertyPage = () => {
               </label>
               <input
                 type="text"
-                name="title"
-                value={formData.title}
+                name="name"
+                value={formData.name}
                 onChange={handleInputChange}
                 placeholder="e.g., Beautiful 2BR Apartment in City Center"
                 className="input w-full"
@@ -193,16 +197,45 @@ const AddPropertyPage = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <MapPinIcon className="w-4 h-4 inline mr-1" />
-                Location *
+                Address *
               </label>
               <input
                 type="text"
-                name="location"
-                value={formData.location}
+                name="address"
+                value={formData.address}
                 onChange={handleInputChange}
-                placeholder="e.g., Cape Town, Western Cape"
+                placeholder="e.g., 123 Main Street"
                 className="input w-full"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                City *
+              </label>
+              <input
+                type="text"
+                name="city"
+                value={formData.city}
+                onChange={handleInputChange}
+                placeholder="e.g., Cape Town"
+                className="input w-full"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Province
+              </label>
+              <input
+                type="text"
+                name="province"
+                value={formData.province}
+                onChange={handleInputChange}
+                placeholder="e.g., Western Cape"
+                className="input w-full"
               />
             </div>
 

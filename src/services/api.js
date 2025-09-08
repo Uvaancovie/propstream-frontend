@@ -1,8 +1,8 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-// Use environment variable or fallback to production URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://propstream-api.onrender.com/api';
+// Use environment variable or fallback to local development URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -41,29 +41,66 @@ export const authAPI = {
     console.log('🔗 API Base URL:', API_BASE_URL);
     const response = await api.post('/auth/register', userData);
     console.log('✅ Registration response:', response.data);
+    
+    if (response.data.success && response.data.token) {
+      localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    
     return response.data;
   },
   
   login: async (credentials) => {
     const response = await api.post('/auth/login', credentials);
+    
+    if (response.data.success && response.data.token) {
+      localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    
     return response.data;
   },
   
   getProfile: async () => {
     const response = await api.get('/auth/me');
     return response.data;
-  }
-};
-
-// Properties API calls
-export const propertiesAPI = {
-  getAll: async () => {
-    const response = await api.get('/properties');
+  },
+  
+  updateProfile: async (profileData) => {
+    const response = await api.put('/auth/profile', profileData);
+    
+    if (response.data.success) {
+      // Update local storage with new user data
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      localStorage.setItem('user', JSON.stringify({
+        ...currentUser,
+        ...response.data.user
+      }));
+    }
+    
     return response.data;
   },
   
-  getAllPublic: async () => {
-    const response = await api.get('/properties/public');
+  updatePassword: async (passwordData) => {
+    const response = await api.put('/auth/password', passwordData);
+    return response.data;
+  },
+  
+  logout: () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+  }
+};
+
+// Properties API
+export const propertiesAPI = {
+  getAll: async (filters = {}) => {
+    const response = await api.get('/properties', { params: filters });
+    return response.data;
+  },
+  
+  getAllPublic: async (filters = {}) => {
+    const response = await api.get('/properties/public', { params: filters });
     return response.data;
   },
   
@@ -77,8 +114,8 @@ export const propertiesAPI = {
     return response.data;
   },
   
-  updateCalendars: async (id, calendars) => {
-    const response = await api.patch(`/properties/${id}/calendars`, calendars);
+  update: async (id, propertyData) => {
+    const response = await api.put(`/properties/${id}`, propertyData);
     return response.data;
   },
   
@@ -88,11 +125,15 @@ export const propertiesAPI = {
   }
 };
 
-// Bookings API calls
+// Bookings API
 export const bookingsAPI = {
-  getAll: async (propertyId = null) => {
-    const params = propertyId ? { propertyId } : {};
-    const response = await api.get('/bookings', { params });
+  getAll: async (filters = {}) => {
+    const response = await api.get('/bookings', { params: filters });
+    return response.data;
+  },
+  
+  getById: async (id) => {
+    const response = await api.get(`/bookings/${id}`);
     return response.data;
   },
   
@@ -101,54 +142,66 @@ export const bookingsAPI = {
     return response.data;
   },
   
-  cancel: async (id) => {
-    const response = await api.post(`/bookings/${id}/cancel`);
-    return response.data;
-  },
-  
-  getRealtorBookings: async () => {
-    const response = await api.get('/bookings/realtor');
-    return response.data;
-  },
-  
   update: async (id, bookingData) => {
-    const response = await api.patch(`/bookings/${id}`, bookingData);
-    return response.data;
-  }
-};
-
-// Calendar API calls
-export const calendarAPI = {
-  import: async (importData) => {
-    const response = await api.post('/calendar/import', importData);
+    const response = await api.put(`/bookings/${id}`, bookingData);
     return response.data;
   },
   
-  getExportUrl: async (propertyId) => {
-    const response = await api.get(`/platforms/${propertyId}/ics-export`);
+  cancel: async (id) => {
+    const response = await api.put(`/bookings/${id}`, { status: 'cancelled' });
+    return response.data;
+  },
+  
+  getCalendarBookings: async (params) => {
+    const queryString = params ? `?${params.toString()}` : '';
+    const response = await api.get(`/bookings/calendar${queryString}`);
     return response.data;
   }
 };
 
-// Message templates API calls
+// Messages API
 export const messagesAPI = {
   getAll: async () => {
     const response = await api.get('/messages');
     return response.data;
   },
   
-  create: async (templateData) => {
-    const response = await api.post('/messages', templateData);
+  create: async (messageData) => {
+    const response = await api.post('/messages', messageData);
     return response.data;
   },
   
-  update: async (id, templateData) => {
-    const response = await api.patch(`/messages/${id}`, templateData);
+  markAsRead: async (id) => {
+    const response = await api.put(`/messages/${id}/read`);
+    return response.data;
+  }
+};
+
+// Invoices API
+export const invoiceAPI = {
+  generate: async (bookingId) => {
+    const response = await api.post(`/invoices/generate/${bookingId}`);
     return response.data;
   },
   
-  delete: async (id) => {
-    const response = await api.delete(`/messages/${id}`);
+  download: (filename) => {
+    window.open(`${API_BASE_URL}/invoices/download/${filename}`, '_blank');
+  }
+};
+
+// Waitlist API
+export const waitlistAPI = {
+  join: async (data) => {
+    const response = await api.post('/waitlist/join', data);
+    return response.data;
+  },
+  
+  getStats: async (referralCode) => {
+    let url = '/waitlist/stats';
+    if (referralCode) {
+      url += `?referralCode=${referralCode}`;
+    }
+    const response = await api.get(url);
     return response.data;
   }
 };
@@ -169,12 +222,47 @@ export const billingAPI = {
 // Newsletter API calls
 export const newsletterAPI = {
   subscribe: async (email) => {
-    const response = await api.post('/newsletter/subscribe', { email });
-    return response.data;
+    try {
+      // Try the waitlist API first for new implementation
+      const response = await waitlistAPI.join({ email, source: 'newsletter' });
+      return response;
+    } catch (error) {
+      // Fall back to legacy newsletter endpoint
+      const response = await api.post('/newsletter/subscribe', { email });
+      return response.data;
+    }
   },
   
   unsubscribe: async (email) => {
     const response = await api.post('/newsletter/unsubscribe', { email });
+    return response.data;
+  }
+};
+
+// Admin API calls (for admin dashboard)
+export const adminAPI = {
+  getUsers: async () => {
+    const response = await api.get('/admin/users');
+    return response.data;
+  },
+  
+  getStats: async () => {
+    const response = await api.get('/admin/stats');
+    return response.data;
+  },
+  
+  updateUserRole: async (userId, role) => {
+    const response = await api.put(`/admin/users/${userId}/role`, { role });
+    return response.data;
+  },
+  
+  deleteUser: async (userId) => {
+    const response = await api.delete(`/admin/users/${userId}`);
+    return response.data;
+  },
+  
+  approveWaitlist: async (waitlistId) => {
+    const response = await api.put(`/admin/waitlist/${waitlistId}/approve`);
     return response.data;
   }
 };
@@ -187,6 +275,6 @@ export const handleAPIError = (error) => {
   return message;
 };
 
-// Export api instance as both named and default export
+// Export api instance
 export { api };
 export default api;

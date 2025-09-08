@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
+import { waitlistAPI } from '../services/api';
 import { supabase } from '../lib/supabase';
 
 export const useWaitlistStats = () => {
   const [stats, setStats] = useState({
     total_signups: 0,
+    realtorCount: 0,
+    clientCount: 0,
     last_24h: 0,
     last_7_days: 0,
     loading: true,
@@ -18,6 +21,25 @@ export const useWaitlistStats = () => {
     try {
       setStats(prev => ({ ...prev, loading: true, error: null }));
 
+      // Try to fetch stats from our backend API first
+      try {
+        const response = await waitlistAPI.getStats();
+        
+        if (response && response.success) {
+          setStats({
+            total_signups: response.data.totalCount || 0,
+            realtorCount: response.data.realtorCount || 0,
+            clientCount: response.data.clientCount || 0,
+            loading: false,
+            error: null
+          });
+          return;
+        }
+      } catch (apiError) {
+        console.log('API stats fetch failed, falling back to Supabase');
+      }
+
+      // Fallback to Supabase if API fails
       // Get total signups
       const { count: totalCount, error: totalError } = await supabase
         .from('waitlist')
@@ -67,6 +89,22 @@ export const useWaitlistStats = () => {
 
   const addToWaitlist = async (email, source = 'website') => {
     try {
+      // Try our backend API first
+      try {
+        const response = await waitlistAPI.join({
+          email,
+          source
+        });
+        
+        // Refresh stats after adding
+        await fetchStats();
+        
+        return { success: true, data: response.data };
+      } catch (apiError) {
+        console.log('API waitlist join failed, falling back to Supabase');
+      }
+
+      // Fallback to Supabase if API fails
       const { data, error } = await supabase
         .from('waitlist')
         .insert([

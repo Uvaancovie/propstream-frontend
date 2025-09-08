@@ -74,7 +74,7 @@ const BookingPage = () => {
     
     if (nights <= 0) return 0;
     
-    return nights * parseFloat(property.pricePerNight || 0);
+    return nights * parseFloat(property.price_per_night || 0);
   };
 
   const handleSubmit = async (e) => {
@@ -90,8 +90,8 @@ const BookingPage = () => {
       return;
     }
 
-    if (bookingData.guests > property.maxGuests) {
-      toast.error(`Maximum guests allowed: ${property.maxGuests}`);
+    if (bookingData.guests > property.max_guests) {
+      toast.error(`Maximum guests allowed: ${property.max_guests}`);
       return;
     }
 
@@ -219,7 +219,7 @@ const BookingPage = () => {
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <UserGroupIcon className="h-6 w-6 mx-auto mb-2 text-gray-600" />
-                <span className="text-sm text-gray-600">{property.maxGuests} guests</span>
+                <span className="text-sm text-gray-600">{property.max_guests} guests</span>
               </div>
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <span className="text-sm text-gray-600">{property.bedrooms} bed</span>
@@ -234,7 +234,7 @@ const BookingPage = () => {
             <div className="flex items-center">
               <CurrencyDollarIcon className="h-6 w-6 text-green-600 mr-2" />
               <span className="text-2xl font-bold text-green-600">
-                ${property.pricePerNight}/night
+                ${property.price_per_night}/night
               </span>
             </div>
           </div>
@@ -288,7 +288,7 @@ const BookingPage = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 required
               >
-                {Array.from({ length: property.maxGuests }, (_, i) => (
+                {Array.from({ length: property.max_guests }, (_, i) => (
                   <option key={i + 1} value={i + 1}>
                     {i + 1} guest{i + 1 > 1 ? 's' : ''}
                   </option>
@@ -330,7 +330,7 @@ const BookingPage = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Booking Summary</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>${property.pricePerNight}/night × {nights} night{nights > 1 ? 's' : ''}</span>
+                    <span>${property.price_per_night}/night × {nights} night{nights > 1 ? 's' : ''}</span>
                     <span>${totalPrice}</span>
                   </div>
                   <div className="flex justify-between font-semibold text-lg border-t pt-2">

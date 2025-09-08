@@ -1,154 +1,100 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { 
-  PlusIcon, 
   ChatBubbleLeftRightIcon,
   EnvelopeIcon,
   ClockIcon,
   UserIcon,
-  PencilIcon,
-  TrashIcon,
+  ArrowPathIcon,
+  DocumentTextIcon,
+  EyeIcon,
+  ArrowDownTrayIcon,
+  PlusIcon,
+  CheckIcon,
   DocumentDuplicateIcon,
-  CheckIcon
+  PencilIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
+import toast from 'react-hot-toast';
 
 const MessagesPage = () => {
-  const [templates, setTemplates] = useState([]);
+  const { user } = useAuth();
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [copiedId, setCopiedId] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    type: 'welcome',
-    subject: '',
-    content: '',
-    trigger: 'manual',
-    isActive: true
-  });
-
-  const templateTypes = [
-    { value: 'welcome', label: 'Welcome Message', description: 'Sent after booking confirmation' },
-    { value: 'checkin', label: 'Check-in Instructions', description: 'Sent before guest arrival' },
-    { value: 'checkout', label: 'Check-out Instructions', description: 'Sent before guest departure' },
-    { value: 'thank_you', label: 'Thank You', description: 'Sent after guest checkout' },
-    { value: 'reminder', label: 'Reminder', description: 'Custom reminder messages' },
-    { value: 'custom', label: 'Custom', description: 'Other message types' }
-  ];
-
-  const triggerTypes = [
-    { value: 'manual', label: 'Manual', description: 'Send manually when needed' },
-    { value: 'booking_confirmed', label: 'Booking Confirmed', description: 'Auto-send when booking is confirmed' },
-    { value: 'day_before_checkin', label: 'Day Before Check-in', description: 'Auto-send 24 hours before arrival' },
-    { value: 'day_of_checkout', label: 'Day of Check-out', description: 'Auto-send on checkout day' },
-    { value: 'after_checkout', label: 'After Check-out', description: 'Auto-send after guest leaves' }
-  ];
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [replyContent, setReplyContent] = useState('');
 
   useEffect(() => {
-    fetchTemplates();
+    fetchMessages();
   }, []);
 
-  const fetchTemplates = async () => {
+  const fetchMessages = async () => {
     try {
-      const response = await api.get('/api/messages');
-      setTemplates(response.data);
+      const response = await api.get('/messages');
+      // Ensure messages is always an array
+      setMessages(response.data.messages || []);
+      console.log('Fetched messages:', response.data);
     } catch (error) {
-      console.error('Error fetching templates:', error);
+      console.error('Error fetching messages:', error);
+      setMessages([]); // Set to empty array on error
+      toast.error('Failed to load messages');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleMarkAsRead = async (messageId) => {
+    try {
+      await api.put(`/messages/${messageId}/read`);
+      fetchMessages(); // Refresh messages
+      toast.success('Message marked as read');
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+      toast.error('Failed to mark message as read');
+    }
+  };
+
+  const handleReply = (message) => {
+    setSelectedMessage(message);
+    setShowReplyModal(true);
+  };
+
+  const handleSubmitReply = async (e) => {
     e.preventDefault();
+    
+    if (!replyContent.trim()) {
+      toast.error('Message cannot be empty');
+      return;
+    }
+    
     try {
-      if (selectedTemplate) {
-        await api.put(`/api/messages/${selectedTemplate._id}`, formData);
-      } else {
-        await api.post('/api/messages', formData);
-      }
-
-      setShowModal(false);
-      setSelectedTemplate(null);
-      resetForm();
-      fetchTemplates();
+      const replyData = {
+        receiver_id: selectedMessage.sender_id,
+        content: replyContent,
+        booking_id: selectedMessage.booking_id
+      };
+      
+      await api.post('/messages', replyData);
+      setShowReplyModal(false);
+      setReplyContent('');
+      fetchMessages(); // Refresh messages
+      toast.success('Reply sent successfully');
     } catch (error) {
-      console.error('Error saving template:', error);
+      console.error('Error sending reply:', error);
+      toast.error('Failed to send reply');
     }
   };
 
-  const handleEdit = (template) => {
-    setSelectedTemplate(template);
-    setFormData({
-      name: template.name,
-      type: template.type,
-      subject: template.subject,
-      content: template.content,
-      trigger: template.trigger,
-      isActive: template.isActive
-    });
-    setShowModal(true);
+  const downloadInvoice = (filename) => {
+    window.open(`${api.defaults.baseURL}/invoices/download/${filename}`, '_blank');
   };
 
-  const handleDelete = async (templateId) => {
-    if (window.confirm('Are you sure you want to delete this message template?')) {
-      try {
-        await api.delete(`/api/messages/${templateId}`);
-        fetchTemplates();
-      } catch (error) {
-        console.error('Error deleting template:', error);
-      }
-    }
-  };
-
-  const handleCopyContent = async (content) => {
-    try {
-      await navigator.clipboard.writeText(content);
-      setCopiedId(content);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch (error) {
-      console.error('Error copying content:', error);
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      type: 'welcome',
-      subject: '',
-      content: '',
-      trigger: 'manual',
-      isActive: true
-    });
-  };
-
-  const openModal = () => {
-    resetForm();
-    setSelectedTemplate(null);
-    setShowModal(true);
-  };
-
-  const getTypeLabel = (type) => {
-    const typeObj = templateTypes.find(t => t.value === type);
-    return typeObj ? typeObj.label : type;
-  };
-
-  const getTriggerLabel = (trigger) => {
-    const triggerObj = triggerTypes.find(t => t.value === trigger);
-    return triggerObj ? triggerObj.label : trigger;
-  };
-
-  const getTypeIcon = (type) => {
-    const icons = {
-      'welcome': '👋',
-      'checkin': '🗝️',
-      'checkout': '👋',
-      'thank_you': '🙏',
-      'reminder': '⏰',
-      'custom': '💬'
-    };
-    return icons[type] || '💬';
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString();
   };
 
   if (loading) {

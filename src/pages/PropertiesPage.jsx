@@ -22,9 +22,10 @@ const PropertiesPage = () => {
     name: '',
     address: '',
     city: '',
+    province: '',
     description: '',
-    pricePerNight: '',
-    maxGuests: '',
+    price_per_night: '',
+    max_guests: '',
     bedrooms: '',
     bathrooms: '',
     amenities: '',
@@ -57,15 +58,20 @@ const PropertiesPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Extract data from form, omitting fields not in backend model
+      const { houseRules, ...formDataForSubmit } = formData;
+      
       const propertyData = {
-        ...formData,
-        pricePerNight: parseFloat(formData.pricePerNight),
-        maxGuests: parseInt(formData.maxGuests),
+        ...formDataForSubmit,
+        price_per_night: parseFloat(formData.price_per_night),
+        max_guests: parseInt(formData.max_guests),
         bedrooms: parseInt(formData.bedrooms),
         bathrooms: parseInt(formData.bathrooms),
         amenities: formData.amenities.split(',').map(a => a.trim()).filter(a => a),
         images: formData.images.split(',').map(i => i.trim()).filter(i => i)
       };
+
+      console.log('Sending property data:', propertyData);
 
       if (selectedProperty) {
         await api.put(`/properties/${selectedProperty._id}`, propertyData);
@@ -88,14 +94,15 @@ const PropertiesPage = () => {
       name: property.name,
       address: property.address,
       city: property.city,
+      province: property.province || '',
       description: property.description || '',
-      pricePerNight: property.pricePerNight.toString(),
-      maxGuests: property.maxGuests.toString(),
+      price_per_night: property.price_per_night.toString(),
+      max_guests: property.max_guests.toString(),
       bedrooms: property.bedrooms.toString(),
       bathrooms: property.bathrooms.toString(),
-      amenities: property.amenities.join(', '),
+      amenities: Array.isArray(property.amenities) ? property.amenities.join(', ') : '',
       houseRules: property.houseRules || '',
-      images: property.images.join(', ')
+      images: Array.isArray(property.images) ? property.images.join(', ') : ''
     });
     setShowModal(true);
   };
@@ -116,9 +123,10 @@ const PropertiesPage = () => {
       name: '',
       address: '',
       city: '',
+      province: '',
       description: '',
-      pricePerNight: '',
-      maxGuests: '',
+      price_per_night: '',
+      max_guests: '',
       bedrooms: '',
       bathrooms: '',
       amenities: '',
@@ -218,7 +226,7 @@ const PropertiesPage = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Total Revenue/Night</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    R{properties.reduce((sum, p) => sum + (Number(p.pricePerNight) || 0), 0).toLocaleString()}
+                    R{properties.reduce((sum, p) => sum + (Number(p.price_per_night) || 0), 0).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -232,7 +240,7 @@ const PropertiesPage = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Total Capacity</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {properties.reduce((sum, p) => sum + (Number(p.maxGuests) || 0), 0)} guests
+                    {properties.reduce((sum, p) => sum + (Number(p.max_guests) || 0), 0)} guests
                   </p>
                 </div>
               </div>
@@ -249,7 +257,7 @@ const PropertiesPage = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Avg Price/Night</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    R{properties.length > 0 ? Math.round(properties.reduce((sum, p) => sum + (Number(p.pricePerNight) || 0), 0) / properties.length).toLocaleString() : 0}
+                    R{properties.length > 0 ? Math.round(properties.reduce((sum, p) => sum + (Number(p.price_per_night) || 0), 0) / properties.length).toLocaleString() : 0}
                   </p>
                 </div>
               </div>
@@ -274,7 +282,7 @@ const PropertiesPage = () => {
                     />
                     {/* Price Badge */}
                     <div className="absolute top-3 right-3 bg-white bg-opacity-95 backdrop-blur-sm text-blue-700 font-bold px-3 py-2 rounded-full text-sm shadow-lg border">
-                      R{property.pricePerNight || 0}
+                      R{property.price_per_night || 0}
                       <span className="text-xs text-gray-600 block">per night</span>
                     </div>
                     {/* Property Type Badge */}
@@ -310,7 +318,7 @@ const PropertiesPage = () => {
                     <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
                       <div className="text-center">
                         <UserGroupIcon className="w-5 h-5 mx-auto text-blue-500 mb-1" />
-                        <span className="text-sm font-semibold text-gray-700">{property.maxGuests || 0} Guests</span>
+                        <span className="text-sm font-semibold text-gray-700">{property.max_guests || 0} Guests</span>
                       </div>
                       <div className="text-center">
                         <BuildingOfficeIcon className="w-5 h-5 mx-auto text-green-500 mb-1" />
@@ -481,8 +489,8 @@ const PropertiesPage = () => {
                             min="0"
                             step="0.01"
                             className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            value={formData.pricePerNight}
-                            onChange={(e) => setFormData({...formData, pricePerNight: e.target.value})}
+                            value={formData.price_per_night}
+                            onChange={(e) => setFormData({...formData, price_per_night: e.target.value})}
                           />
                         </div>
                       </div>
@@ -496,8 +504,8 @@ const PropertiesPage = () => {
                           required
                           min="1"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          value={formData.maxGuests}
-                          onChange={(e) => setFormData({...formData, maxGuests: e.target.value})}
+                          value={formData.max_guests}
+                          onChange={(e) => setFormData({...formData, max_guests: e.target.value})}
                         />
                       </div>
 

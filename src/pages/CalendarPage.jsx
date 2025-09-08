@@ -135,8 +135,9 @@ const CalendarPage = () => {
     // Generate 42 days (6 weeks)
     for (let i = 0; i < 42; i++) {
       const dayBookings = bookings.filter(booking => {
-        const bookingStart = new Date(booking.start_date || booking.start);
-        const bookingEnd = new Date(booking.end_date || booking.end);
+        // Handle both API naming (check_in/check_out) and localStorage naming (start/start_date)
+        const bookingStart = new Date(booking.check_in || booking.start_date || booking.start || booking.checkIn);
+        const bookingEnd = new Date(booking.check_out || booking.end_date || booking.end || booking.checkOut);
         return currentDatePointer >= bookingStart && currentDatePointer <= bookingEnd;
       });
       
@@ -215,7 +216,10 @@ const CalendarPage = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Revenue</p>
               <p className="text-2xl font-bold text-gray-900">
-                R{bookings.reduce((sum, booking) => sum + (booking.total_price || 0), 0)}
+                R{bookings.reduce((sum, booking) => {
+                  const amount = booking.total_amount || booking.total_price || booking.totalPrice || 0;
+                  return sum + parseFloat(amount);
+                }, 0).toFixed(2)}
               </p>
             </div>
           </div>
@@ -227,7 +231,10 @@ const CalendarPage = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Guests</p>
               <p className="text-2xl font-bold text-gray-900">
-                {bookings.reduce((sum, booking) => sum + (booking.guest_count || 0), 0)}
+                {bookings.reduce((sum, booking) => {
+                  const guests = booking.guests || booking.guest_count || 0;
+                  return sum + parseInt(guests);
+                }, 0)}
               </p>
             </div>
           </div>
@@ -355,11 +362,11 @@ const CalendarPage = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-gray-900">
-                      {new Date(booking.start_date || booking.start).toLocaleDateString()} - 
-                      {new Date(booking.end_date || booking.end).toLocaleDateString()}
+                      {new Date(booking.check_in || booking.start_date || booking.start || booking.checkIn).toLocaleDateString()} - 
+                      {new Date(booking.check_out || booking.end_date || booking.end || booking.checkOut).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-500">
-                      R{booking.total_price || booking.totalPrice || 0}
+                      R{booking.total_amount || booking.total_price || booking.totalPrice || 0}
                     </p>
                   </div>
                 </div>

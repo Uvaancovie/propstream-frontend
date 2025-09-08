@@ -99,14 +99,27 @@ const BookingsPage = () => {
     }
   };
 
+  const handleViewDetails = (booking) => {
+    // Navigate to a booking details page
+    window.location.href = `/booking/${booking._id || booking.id}`;
+  };
+
   const filterBookings = (bookings, filter) => {
     const now = new Date();
     
     switch (filter) {
       case 'upcoming':
-        return bookings.filter(booking => new Date(booking.checkIn) > now);
+        return bookings.filter(booking => {
+          // Handle both API naming (check_in) and localStorage naming (checkIn)
+          const checkInDate = new Date(booking.check_in || booking.checkIn);
+          return checkInDate > now;
+        });
       case 'past':
-        return bookings.filter(booking => new Date(booking.checkOut) < now);
+        return bookings.filter(booking => {
+          // Handle both API naming (check_out) and localStorage naming (checkOut)
+          const checkOutDate = new Date(booking.check_out || booking.checkOut);
+          return checkOutDate < now;
+        });
       case 'pending':
         return bookings.filter(booking => booking.status === 'pending');
       default:
@@ -190,8 +203,9 @@ const BookingsPage = () => {
           <div className="space-y-6">
             {filteredBookings.map((booking, index) => {
               const StatusIcon = getStatusIcon(booking.status);
-              const checkInDate = new Date(booking.checkIn);
-              const checkOutDate = new Date(booking.checkOut);
+              // Handle both API naming (check_in) and localStorage naming (checkIn)
+              const checkInDate = new Date(booking.check_in || booking.checkIn);
+              const checkOutDate = new Date(booking.check_out || booking.checkOut);
               const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
               
               return (
@@ -201,7 +215,7 @@ const BookingsPage = () => {
                       <div className="flex-1">
                         <div className="flex items-center mb-2">
                           <h3 className="text-xl font-semibold text-gray-900 mr-3">
-                            {booking.propertyName}
+                            {booking.property_name || booking.propertyName}
                           </h3>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
                             <StatusIcon className="w-3 h-3 mr-1" />
@@ -239,7 +253,7 @@ const BookingsPage = () => {
                           <div className="flex items-center text-green-600">
                             <CurrencyDollarIcon className="h-5 w-5 mr-1" />
                             <span className="font-semibold">
-                              ${booking.totalPrice} total ({nights} night{nights > 1 ? 's' : ''})
+                              ${booking.total_amount || booking.totalPrice} total ({nights} night{nights > 1 ? 's' : ''})
                             </span>
                           </div>
                           
@@ -248,10 +262,10 @@ const BookingsPage = () => {
                           </div>
                         </div>
 
-                        {booking.message && (
+                        {(booking.special_requests || booking.message) && (
                           <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                             <div className="text-sm font-medium text-gray-700 mb-1">Special Requests:</div>
-                            <div className="text-sm text-gray-600">{booking.message}</div>
+                            <div className="text-sm text-gray-600">{booking.special_requests || booking.message}</div>
                           </div>
                         )}
                       </div>
@@ -271,7 +285,10 @@ const BookingsPage = () => {
                         </button>
                       )}
                       
-                      <button className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                      <button 
+                        onClick={() => handleViewDetails(booking)}
+                        className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
                         View Details
                       </button>
                     </div>

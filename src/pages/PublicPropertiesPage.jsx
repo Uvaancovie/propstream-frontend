@@ -139,7 +139,7 @@ const PublicPropertiesPage = () => {
                   {/* Property Badge */}
                   <div className="absolute top-4 left-4 bg-white bg-opacity-90 backdrop-blur-sm px-3 py-1 rounded-full">
                     <span className="text-sm font-semibold text-blue-600">
-                      R{property.pricePerNight}/night
+                      R{property.price_per_night}/night
                     </span>
                   </div>
                   
@@ -186,7 +186,7 @@ const PublicPropertiesPage = () => {
                     </div>
                     <div className="flex items-center">
                       <UserGroupIcon className="w-4 h-4 mr-1" />
-                      <span>{property.maxGuests} guests</span>
+                      <span>{property.max_guests} guests</span>
                     </div>
                   </div>
 

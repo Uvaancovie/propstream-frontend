@@ -69,12 +69,8 @@ const PublicRoute = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    // Redirect based on role
-    if (user?.role === 'client') {
-      return <Navigate to="/browse-properties" replace />;
-    } else {
-      return <Navigate to="/dashboard" replace />;
-    }
+    // Always redirect to dashboard
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
@@ -136,6 +132,7 @@ function App() {
                 path="/browse-properties" 
                 element={
                   <AppLayout>
+                    {/* Allow both authenticated and unauthenticated users to access this page */}
                     <BrowsePropertiesPage />
                   </AppLayout>
                 } 
@@ -153,7 +150,7 @@ function App() {
               <Route 
                 path="/dashboard" 
                 element={
-                  <ProtectedRoute allowedRoles={['realtor', 'client']}>
+                  <ProtectedRoute allowedRoles={['realtor', 'client', 'admin']}>
                     <AppLayout>
                       <Dashboard />
                     </AppLayout>
@@ -213,7 +210,7 @@ function App() {
               <Route 
                 path="/messages" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['realtor']}>
                     <AppLayout>
                       <MessagesPage />
                     </AppLayout>

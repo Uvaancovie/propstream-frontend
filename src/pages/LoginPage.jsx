@@ -62,22 +62,26 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#0E0E12] to-[#0A0A0A] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
           <Link to="/" className="inline-flex items-center">
-            <span className="text-4xl mr-3">🏖️</span>
-            <span className="text-3xl font-bold text-primary-600">Propstream</span>
+            <img 
+              src="/novaprop-logo.jpeg" 
+              alt="NovaProp" 
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg shadow-[0_0_20px_rgba(124,58,237,.45)]" 
+            />
+            <span className="text-3xl font-bold text-white ml-3">PropNova</span>
           </Link>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+        <h2 className="mt-6 text-center text-3xl font-bold text-white">
           Welcome back
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-sm text-slate-300">
           Don't have an account?{' '}
           <Link
             to="/register"
-            className="font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200"
+            className="font-medium text-violet-400 hover:text-violet-300 transition-colors duration-200"
           >
             Sign up for free
           </Link>
@@ -85,16 +89,16 @@ const LoginPage = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl rounded-xl sm:px-10 border border-gray-200">
+        <div className="bg-[#0B0B0E] py-8 px-4 shadow-xl rounded-xl sm:px-10 border border-violet-900/40">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {errors.general && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-900/20 border border-red-800/40 text-red-400 px-4 py-3 rounded-lg text-sm">
                 {errors.general}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="label">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-300">
                 Email address
               </label>
               <div className="mt-1">
@@ -105,17 +109,17 @@ const LoginPage = () => {
                   autoComplete="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`input-field ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                  className={`w-full px-4 py-2 bg-[#121220] border ${errors.email ? 'border-red-500' : 'border-slate-700'} rounded-md shadow-sm text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500`}
                   placeholder="Enter your email"
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+                  <p className="mt-2 text-sm text-red-400">{errors.email}</p>
                 )}
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="label">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-300">
                 Password
               </label>
               <div className="mt-1 relative">
@@ -126,7 +130,7 @@ const LoginPage = () => {
                   autoComplete="current-password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`input-field pr-10 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                  className={`w-full px-4 py-2 bg-[#121220] border ${errors.password ? 'border-red-500' : 'border-slate-700'} rounded-md shadow-sm text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 pr-10`}
                   placeholder="Enter your password"
                 />
                 <button
@@ -135,13 +139,13 @@ const LoginPage = () => {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeSlashIcon className="h-5 w-5 text-slate-400 hover:text-slate-300" />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeIcon className="h-5 w-5 text-slate-400 hover:text-slate-300" />
                   )}
                 </button>
                 {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                  <p className="mt-2 text-sm text-red-400">{errors.password}</p>
                 )}
               </div>
             </div>
@@ -150,7 +154,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
+                className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium py-2 px-4 rounded-md shadow-[0_0_20px_rgba(124,58,237,.25)] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
               >
                 {loading ? (
                   <>
@@ -167,10 +171,10 @@ const LoginPage = () => {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-slate-700" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Quick Demo Access</span>
+                <span className="px-2 bg-[#0B0B0E] text-slate-400">Quick Demo Access</span>
               </div>
             </div>
 
@@ -179,25 +183,25 @@ const LoginPage = () => {
                 type="button"
                 onClick={() => {
                   setFormData({
-                    email: 'demo@propstream.com',
+                    email: 'demo@propnova.com',
                     password: 'demo123'
                   });
                 }}
-                className="w-full btn-outline"
+                className="w-full border border-violet-600/50 bg-violet-900/20 hover:bg-violet-900/30 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
               >
                 Fill Demo Credentials
               </button>
             </div>
           </div>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-slate-400">
             <p>
               By signing in, you agree to our{' '}
-              <a href="#" className="text-primary-600 hover:text-primary-500">
+              <a href="#" className="text-violet-400 hover:text-violet-300">
                 Terms of Service
               </a>{' '}
               and{' '}
-              <a href="#" className="text-primary-600 hover:text-primary-500">
+              <a href="#" className="text-violet-400 hover:text-violet-300">
                 Privacy Policy
               </a>
             </p>
