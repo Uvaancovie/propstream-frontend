@@ -169,14 +169,14 @@ const PropertyCard = ({ property }) => {
           <div className="flex items-center text-green-600">
             <CurrencyDollarIcon className="h-5 w-5 mr-1" />
             <span className="font-semibold">
-              ${property.pricePerNight ? `${property.pricePerNight}/night` : 'Contact for pricing'}
+              ${property.price_per_night ? `${property.price_per_night}/night` : 'Contact for pricing'}
             </span>
           </div>
         </div>
 
         {/* Property Stats */}
         <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
-          <span>{property.maxGuests} guests</span>
+          <span>{property.max_guests} guests</span>
           <span>{property.bedrooms} bed</span>
           <span>{property.bathrooms} bath</span>
         </div>
@@ -186,16 +186,31 @@ const PropertyCard = ({ property }) => {
           <div className="flex items-center">
             <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center mr-3">
               <span className="text-white text-sm font-medium">
-                {property.realtorName ? property.realtorName.charAt(0) : 'R'}
+                {(property.realtorName || property.realtor_name) ? (property.realtorName || property.realtor_name).charAt(0) : 'R'}
               </span>
             </div>
-            <div>
+            <div className="flex-1">
               <div className="text-sm font-medium text-gray-900">
-                {property.realtorName || 'Professional Realtor'}
+                {property.realtorName || property.realtor_name || 'Professional Realtor'}
               </div>
-              <div className="text-xs text-gray-600">
-                {property.realtorEmail || 'Licensed Real Estate Agent'}
+              <div className="text-xs text-gray-600 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <a href={`mailto:${property.realtorEmail || property.realtor_email || ''}`} className="hover:text-primary-600 hover:underline">
+                  {property.realtorEmail || property.realtor_email || 'Contact for information'}
+                </a>
               </div>
+              {(property.realtorPhone || property.realtor_phone) && (
+                <div className="text-xs text-gray-600 flex items-center mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <a href={`tel:${property.realtorPhone || property.realtor_phone || ''}`} className="hover:text-primary-600 hover:underline">
+                    {property.realtorPhone || property.realtor_phone}
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>
