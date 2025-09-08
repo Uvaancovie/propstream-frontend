@@ -30,6 +30,16 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+    
+    // Log detailed error information
+    console.error('API Error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+      headers: error.config?.headers
+    });
+    
     return Promise.reject(error);
   }
 );
@@ -105,8 +115,22 @@ export const propertiesAPI = {
   },
   
   create: async (propertyData) => {
-    const response = await api.post('/properties', propertyData);
-    return response.data;
+    try {
+      console.log('Sending property data:', propertyData);
+      const response = await api.post('/properties', propertyData);
+      return response.data;
+    } catch (error) {
+      console.error('Error saving property:', error);
+      if (error.response && error.response.data) {
+        // Return the error response from the server
+        return { 
+          success: false, 
+          error: error.response.data.error || 'An error occurred',
+          message: error.response.data.message || error.message
+        };
+      }
+      throw error;
+    }
   },
   
   getById: async (id) => {

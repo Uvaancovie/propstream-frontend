@@ -30,10 +30,11 @@ const AddPropertyPage = () => {
     bathrooms: '',
     max_guests: '',
     amenities: '',
-    image_url: '',
+    images: '',  // Changed from image_url to match PropertiesPage
     property_type: 'apartment',
     available_from: '',
-    available_to: ''
+    available_to: '',
+    houseRules: ''  // Added to match PropertiesPage
   });
 
   const propertyTypes = [
@@ -56,8 +57,23 @@ const AddPropertyPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Check authentication and role
+    if (!user) {
+      toast.error('You must be logged in to add a property');
+      navigate('/login');
+      return;
+    }
+    
     if (user?.role !== 'realtor') {
       toast.error('Only realtors can add properties');
+      return;
+    }
+
+    // Verify auth token exists
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast.error('Authentication token missing. Please log in again.');
+      navigate('/login');
       return;
     }
 
@@ -72,20 +88,30 @@ const AddPropertyPage = () => {
       // Prepare property data
       const propertyData = {
         ...formData,
-        price_per_night: parseFloat(formData.price_per_night),
+        price_per_night: parseFloat(formData.price_per_night) || 0,
         bedrooms: parseInt(formData.bedrooms) || 1,
         bathrooms: parseInt(formData.bathrooms) || 1,
         max_guests: parseInt(formData.max_guests) || 2,
-        amenities: formData.amenities.split(',').map(a => a.trim()).filter(a => a),
-        images: formData.image_url ? [formData.image_url] : [],
-        is_available: true,
-        realtor_id: user.id,
-        realtor_name: user.name,
-        realtor_email: user.email,
-        realtor_phone: user.phone || ''
+        amenities: formData.amenities ? formData.amenities.split(',').map(a => a.trim()).filter(a => a) : [],
+        images: formData.images ? formData.images.split(',').map(i => i.trim()).filter(i => i) : [],
+        is_available: true
       };
 
-      console.log('🏠 Creating property:', propertyData);
+      // Only add these if they're not already provided by the backend
+      if (!propertyData.realtor_id && user.id) {
+        propertyData.realtor_id = user.id;
+      }
+      if (!propertyData.realtor_name && user.name) {
+        propertyData.realtor_name = user.name;
+      }
+      if (!propertyData.realtor_email && user.email) {
+        propertyData.realtor_email = user.email;
+      }
+      if (!propertyData.realtor_phone && user.phone) {
+        propertyData.realtor_phone = user.phone;
+      }
+
+      console.log('🏠 Sending property data:', propertyData);
       
       try {
         // Try API first using the propertiesAPI service
@@ -100,22 +126,29 @@ const AddPropertyPage = () => {
           throw new Error(response.message || 'Failed to add property');
         }
       } catch (apiError) {
-        console.warn('API request failed, saving to localStorage:', apiError);
+        console.warn('API request failed, error details:', apiError);
         
-        // Fallback to localStorage
-        const localPropertyData = {
-          ...propertyData,
-          id: Date.now(),
-          createdAt: new Date().toISOString()
-        };
+        if (apiError.response) {
+          console.warn('Server responded with:', apiError.response.status, apiError.response.data);
+          toast.error(apiError.response.data.error || apiError.response.data.message || 'Server error');
+        } else {
+          console.warn('API request failed, saving to localStorage:', apiError);
+          
+          // Fallback to localStorage
+          const localPropertyData = {
+            ...propertyData,
+            id: Date.now(),
+            createdAt: new Date().toISOString()
+          };
 
-        addPropertyToStorage(localPropertyData);
-        toast.success('Property added successfully (saved locally)!');
-        navigate('/dashboard');
+          addPropertyToStorage(localPropertyData);
+          toast.success('Property added successfully (saved locally)!');
+          navigate('/dashboard');
+        }
       }
     } catch (error) {
       console.error('❌ Property creation error:', error);
-      toast.error(error.response?.data?.message || 'Failed to add property. Please try again.');
+      toast.error(error.response?.data?.message || error.message || 'Failed to add property. Please try again.');
     } finally {
       setLoading(false);
     }

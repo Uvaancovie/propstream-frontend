@@ -89,7 +89,6 @@ const PropertiesPage = () => {
   };
 
   const handleEdit = (property) => {
-    setSelectedProperty(property);
     setFormData({
       name: property.name,
       address: property.address,
@@ -104,7 +103,9 @@ const PropertiesPage = () => {
       houseRules: property.houseRules || '',
       images: Array.isArray(property.images) ? property.images.join(', ') : ''
     });
-    setShowModal(true);
+    
+    // Call openModal with the property to edit
+    openModal(property);
   };
 
   const handleDelete = async (propertyId) => {
@@ -135,9 +136,12 @@ const PropertiesPage = () => {
     });
   };
 
-  const openModal = () => {
+  const openModal = (property) => {
+    // Only allow editing existing properties
+    if (!property) return;
+    
     resetForm();
-    setSelectedProperty(null);
+    setSelectedProperty(property);
     setShowModal(true);
   };
 
@@ -176,13 +180,6 @@ const PropertiesPage = () => {
           >
             <ArrowPathIcon className="w-5 h-5" />
           </button>
-          <button
-            onClick={openModal}
-            className="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg flex items-center space-x-2 transition-all duration-200"
-          >
-            <PlusIcon className="w-5 h-5" />
-            <span>Add Property</span>
-          </button>
         </div>
       </div>
 
@@ -192,15 +189,8 @@ const PropertiesPage = () => {
           <BuildingOfficeIcon className="w-24 h-24 text-blue-300 mx-auto mb-6 animate-pulse" />
           <h3 className="text-2xl font-semibold text-gray-900 mb-3">No properties yet</h3>
           <p className="text-gray-600 mb-8 max-w-md mx-auto">
-            Get started by adding your first rental property to showcase to potential guests.
+            There are no properties in your portfolio yet. Properties will appear here once they are added to your account.
           </p>
-          <button
-            onClick={openModal}
-            className="btn btn-primary px-6 py-3 text-lg shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <PlusIcon className="w-5 h-5 mr-2 inline" />
-            Add Your First Property
-          </button>
         </div>
       ) : (
         <>
@@ -382,10 +372,10 @@ const PropertiesPage = () => {
             {/* Header with background - Fixed position */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 rounded-t-xl flex-shrink-0">
               <h2 className="text-2xl font-bold text-white">
-                {selectedProperty ? 'Edit Property' : 'Add New Property'}
+                Edit Property
               </h2>
               <p className="text-blue-100 mt-1">
-                {selectedProperty ? 'Update your property details' : 'Fill in the details to add your property'}
+                Update your property details
               </p>
               
               {/* Close button */}
@@ -631,7 +621,7 @@ const PropertiesPage = () => {
                   onClick={handleSubmit}
                   className="flex-1 py-2 px-4 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                 >
-                  {selectedProperty ? 'Update Property' : 'Add Property'}
+                  Update Property
                 </button>
               </div>
             </div>
