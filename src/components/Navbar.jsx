@@ -10,7 +10,8 @@ import {
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 
 const Navbar = () => {
@@ -29,6 +30,7 @@ const Navbar = () => {
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['client', 'realtor'] },
     { name: 'Browse Properties', href: '/browse-properties', icon: BuildingOfficeIcon, roles: ['client'] },
     { name: 'Properties', href: '/properties', icon: BuildingOfficeIcon, roles: ['realtor'] },
+    { name: 'AI Studio', href: '/ai-studio', icon: SparklesIcon, roles: ['realtor'] },
     { name: 'Bookings', href: '/bookings', icon: CalendarDaysIcon, roles: ['client', 'realtor'] },
     { name: 'Calendar', href: '/calendar', icon: CalendarDaysIcon, roles: ['realtor'] },
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, roles: ['realtor'] },

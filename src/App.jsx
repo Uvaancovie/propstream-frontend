@@ -22,8 +22,10 @@ import CalendarPage from './pages/CalendarPage';
 import MessagesPage from './pages/MessagesPage';
 import BillingPage from './pages/BillingPage';
 import PublicPropertiesPage from './pages/PublicPropertiesPage';
+import PublicPropertyDetailsPage from './pages/PublicPropertyDetailsPage';
 import BrowsePropertiesPage from './pages/BrowsePropertiesPage';
 import PropertyDetailsPage from './pages/PropertyDetailsPage';
+import AIStudioPage from './pages/AIStudioPage';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -128,6 +130,8 @@ function App() {
               />
 
               {/* Public property routes - available to all */}
+              <Route path="/browse" element={<PublicPropertiesPage />} />
+              <Route path="/property/:slug" element={<PublicPropertyDetailsPage />} />
               <Route 
                 path="/browse-properties" 
                 element={
@@ -178,6 +182,16 @@ function App() {
                 } 
               />
               <Route 
+                path="/ai-studio" 
+                element={
+                  <ProtectedRoute allowedRoles={['realtor']}>
+                    <AppLayout>
+                      <AIStudioPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
                 path="/bookings" 
                 element={
                   <ProtectedRoute>
@@ -210,7 +224,7 @@ function App() {
               <Route 
                 path="/messages" 
                 element={
-                  <ProtectedRoute allowedRoles={['realtor']}>
+                  <ProtectedRoute allowedRoles={['realtor','client']}>
                     <AppLayout>
                       <MessagesPage />
                     </AppLayout>
