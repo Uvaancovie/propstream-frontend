@@ -28,13 +28,15 @@ const Navbar = () => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['client', 'realtor'] },
-    { name: 'Browse Properties', href: '/browse-properties', icon: BuildingOfficeIcon, roles: ['client'] },
+    { name: 'Profile', href: '/profile', icon: UserCircleIcon, roles: ['client', 'realtor'] },
+  { name: 'Browse Properties', href: '/browse-properties', icon: BuildingOfficeIcon, roles: ['client'] },
+  { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, roles: ['client'] },
     { name: 'Properties', href: '/properties', icon: BuildingOfficeIcon, roles: ['realtor'] },
     { name: 'AI Studio', href: '/ai-studio', icon: SparklesIcon, roles: ['realtor'] },
     { name: 'Bookings', href: '/bookings', icon: CalendarDaysIcon, roles: ['client', 'realtor'] },
     { name: 'Calendar', href: '/calendar', icon: CalendarDaysIcon, roles: ['realtor'] },
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, roles: ['realtor'] },
-    { name: 'Billing', href: '/billing', icon: CreditCardIcon, roles: ['client', 'realtor'] },
+  { name: 'Billing', href: '/billing', icon: CreditCardIcon, roles: ['client'] },
   ];
 
   // Filter navigation based on user role
@@ -65,8 +67,8 @@ const Navbar = () => {
             {/* Public navigation */}
             <div className="flex items-center space-x-6">
               <Link
-                to="/browse-properties"
-                className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                to="/browse"
+                className="text-white bg-white/5 hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 Browse Properties
               </Link>
@@ -107,38 +109,41 @@ const Navbar = () => {
             </div>
             
             {/* Desktop navigation */}
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {filteredNavigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
-                      isActivePath(item.href)
-                        ? 'border-violet-500 text-white'
-                        : 'border-transparent text-slate-400 hover:border-slate-600 hover:text-slate-300'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 mr-2" />
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </div>
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                {/* Always-visible Browse link for everyone */}
+                <Link to="/browse" className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 border-transparent text-slate-300 hover:border-slate-600 hover:text-slate-200">
+                  <BuildingOfficeIcon className="w-4 h-4 mr-2" />
+                  Browse
+                </Link>
+
+                {filteredNavigation.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
+                        isActivePath(item.href)
+                          ? 'border-violet-500 text-white'
+                          : 'border-transparent text-slate-400 hover:border-slate-600 hover:text-slate-300'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 mr-2" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </div>
           </div>
 
           {/* User menu */}
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-slate-300">
-                Welcome, {user?.name || user?.email}
-                {user?.role && (
-                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-900/50 text-violet-300 border border-violet-800">
-                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                  </span>
-                )}
-              </span>
+              {user?.role && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-900/50 text-violet-300 border border-violet-800">
+                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                </span>
+              )}
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center px-3 py-2 border border-slate-700 text-sm leading-4 font-medium rounded-md text-slate-300 hover:text-white hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 transition-colors duration-200"
@@ -169,6 +174,20 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <div className="sm:hidden">
           <div className="pt-2 pb-3 space-y-1">
+            {/* Always present Browse link on mobile */}
+            <Link
+              to="/browse"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200 ${
+                isActivePath('/browse')
+                  ? 'bg-violet-900/20 border-violet-500 text-violet-300'
+                  : 'border-transparent text-slate-400 hover:bg-slate-800/50 hover:border-slate-700 hover:text-slate-300'
+              }`}
+            >
+              <BuildingOfficeIcon className="w-5 h-5 mr-3" />
+              Browse Properties
+            </Link>
+
             {filteredNavigation.map((item) => {
               const Icon = item.icon;
               return (

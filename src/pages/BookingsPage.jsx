@@ -15,6 +15,12 @@ import {
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const BookingsPage = () => {
+  // Helper to format numbers as South African Rand (R)
+  const formatZAR = (value) => {
+    if (value == null) return 'R0';
+    const num = Number(value) || 0;
+    return 'R' + num.toLocaleString('en-ZA', { maximumFractionDigits: 0 });
+  };
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -253,18 +259,24 @@ const BookingsPage = () => {
                           <div className="flex items-center text-green-600">
                             <CurrencyDollarIcon className="h-5 w-5 mr-1" />
                             <span className="font-semibold">
-                              ${booking.total_amount || booking.totalPrice} total ({nights} night{nights > 1 ? 's' : ''})
+                              {formatZAR(booking.total_amount || booking.totalPrice)} total ({nights} night{nights > 1 ? 's' : ''})
                             </span>
                           </div>
                           
                           <div className="text-sm text-gray-500">
-                            Booked on {new Date(booking.createdAt).toLocaleDateString()}
+                            Booked on {new Date(booking.createdAt || booking.created_at).toLocaleDateString()}
                           </div>
                         </div>
 
                         {(booking.special_requests || booking.message) && (
                           <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                             <div className="text-sm font-medium text-gray-700 mb-1">Special Requests:</div>
+                            {user?.role === 'realtor' && (booking.guest_name || booking.guestName || booking.guest_name === '') && (
+                              <div className="text-xs text-gray-500 mb-2">
+                                From: <span className="font-medium text-gray-700">{booking.guest_name || booking.guestName || booking.guestName}</span>
+                                {' '}— Sent on {new Date(booking.createdAt || booking.created_at).toLocaleDateString()}
+                              </div>
+                            )}
                             <div className="text-sm text-gray-600">{booking.special_requests || booking.message}</div>
                           </div>
                         )}

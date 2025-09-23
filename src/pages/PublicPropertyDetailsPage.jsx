@@ -8,6 +8,7 @@ const PublicPropertyDetailsPage = () => {
   const { slug } = useParams();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
 
@@ -15,19 +16,50 @@ const PublicPropertyDetailsPage = () => {
     loadProperty();
   }, [slug]);
 
+  // API base (fall back to localhost backend)
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+
+  const normalizeImageUrl = (url) => {
+    if (!url) return '/novaprop-logo.jpeg';
+    if (/^(https?:)?\/\//i.test(url) || url.startsWith('data:')) return url;
+    const apiHost = API_BASE.replace(/\/+api\/?$/i, '').replace(/\/+$/,'');
+    if (url.startsWith('/')) return `${apiHost}${url}`;
+    return `${apiHost}/${url}`;
+  };
+
   const loadProperty = async () => {
     setLoading(true);
+    setLoadError('');
     try {
-      const response = await fetch(`/api/public/properties/${slug}`);
-      if (response.ok) {
-        const data = await response.json();
-        setProperty(data);
-      } else {
-        console.error('Property not found');
+      const url = `${API_BASE.replace(/\/+$/,'')}/public/properties/${slug}`;
+      const res = await fetch(url, { credentials: 'include' });
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('Error loading property, status:', res.status, 'response:', text);
+        setLoadError(`Server error (${res.status}).`);
         setProperty(null);
+      } else if (!contentType.includes('application/json')) {
+        const text = await res.text();
+        console.error('Expected JSON but received:', text.slice(0, 300));
+        setLoadError('Invalid response from server (not JSON). Check API base URL or proxy.');
+        setProperty(null);
+      } else {
+        const json = await res.json();
+        // backend returns { success: true, property: { ... } }
+        if (json && json.success && json.property) {
+          setProperty(json.property);
+          setLoadError('');
+        } else {
+          console.error('Unexpected payload when loading property:', json);
+          setLoadError('Unexpected response from server.');
+          setProperty(null);
+        }
       }
     } catch (error) {
       console.error('Error loading property:', error);
+      setLoadError(error.message || 'Failed to load property');
       setProperty(null);
     } finally {
       setLoading(false);
@@ -35,9 +67,9 @@ const PublicPropertyDetailsPage = () => {
   };
 
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZA', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'ZAR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
@@ -45,7 +77,8 @@ const PublicPropertyDetailsPage = () => {
 
   const shareProperty = (method) => {
     const url = window.location.href;
-    const title = `${property.title} - ${formatPrice(property.price)}`;
+    const priceVal = property?.price_per_night ?? property?.price ?? 0;
+    const title = `${property.title} - ${formatPrice(priceVal)}`;
     
     switch (method) {
       case 'copy':
@@ -70,10 +103,10 @@ const PublicPropertyDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0B0B0E] text-slate-200 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-gray-600">Loading property details...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500"></div>
+          <p className="mt-2 text-slate-400">Loading property details...</p>
         </div>
       </div>
     );
@@ -81,17 +114,17 @@ const PublicPropertyDetailsPage = () => {
 
   if (!property) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0B0B0E] text-slate-200 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto">
-          <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
-            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-slate-800 rounded-lg p-8 shadow-sm border border-slate-700">
+            <svg className="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m6 0v-7h4v7m-4-3h2m-2 0V9h2v3" />
             </svg>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Property Not Found</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-lg font-semibold text-slate-100 mb-2">Property Not Found</h3>
+            <p className="text-slate-400 mb-4">
               The property you're looking for doesn't exist or is no longer available.
             </p>
-            <Link to="/browse" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link to="/browse" className="text-blue-400 hover:text-blue-300 font-medium">
               ← Back to Properties
             </Link>
           </div>
@@ -101,12 +134,12 @@ const PublicPropertyDetailsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0B0B0E] text-slate-200">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b">
+      <nav className="bg-transparent border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link to="/browse" className="flex items-center text-gray-600 hover:text-gray-900">
+            <Link to="/browse" className="flex items-center text-slate-300 hover:text-slate-100">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -123,20 +156,26 @@ const PublicPropertyDetailsPage = () => {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {loadError && (
+          <div className="mb-6 bg-yellow-900/30 border border-yellow-700 text-yellow-200 p-4 rounded-lg">
+            <strong>Unable to load property:</strong> {loadError}
+            <div className="text-xs text-yellow-200/80 mt-1">Check that the backend API is running at the configured VITE_API_BASE_URL ({import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'})</div>
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Image Gallery */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className="relative h-96 bg-gray-200 rounded-lg overflow-hidden">
+            <div className="relative h-96 bg-slate-800 rounded-lg overflow-hidden">
               {property.images && property.images.length > 0 ? (
                 <img
-                  src={property.images[activeImageIndex]}
+                  src={normalizeImageUrl(property.images[activeImageIndex])}
                   alt={property.title}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-full h-full flex items-center justify-center bg-slate-800">
+                  <svg className="w-16 h-16 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m6 0v-7h4v7m-4-3h2m-2 0V9h2v3" />
                   </svg>
                 </div>
@@ -148,18 +187,18 @@ const PublicPropertyDetailsPage = () => {
                   <button
                     onClick={() => setActiveImageIndex(Math.max(0, activeImageIndex - 1))}
                     disabled={activeImageIndex === 0}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 p-2 bg-slate-800 bg-opacity-80 rounded-full hover:bg-opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-slate-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
                   <button
                     onClick={() => setActiveImageIndex(Math.min(property.images.length - 1, activeImageIndex + 1))}
                     disabled={activeImageIndex === property.images.length - 1}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-slate-800 bg-opacity-80 rounded-full hover:bg-opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-slate-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -174,12 +213,12 @@ const PublicPropertyDetailsPage = () => {
                   <button
                     key={index}
                     onClick={() => setActiveImageIndex(index)}
-                    className={`relative h-24 bg-gray-200 rounded-lg overflow-hidden ${
-                      index === activeImageIndex ? 'ring-2 ring-blue-500' : ''
+                    className={`relative h-24 bg-slate-800 rounded-lg overflow-hidden ${
+                      index === activeImageIndex ? 'ring-2 ring-violet-500' : ''
                     }`}
                   >
                     <img
-                      src={image}
+                      src={normalizeImageUrl(image)}
                       alt={`${property.title} - ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -230,7 +269,7 @@ const PublicPropertyDetailsPage = () => {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4 text-gray-600 mb-4">
+              <div className="flex items-center space-x-4 text-slate-400 mb-4">
                 <div className="flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -241,51 +280,51 @@ const PublicPropertyDetailsPage = () => {
                 <Badge variant="secondary">{property.propertyType}</Badge>
               </div>
 
-              <div className="text-3xl font-bold text-blue-600 mb-4">
-                {formatPrice(property.price)}
+              <div className="text-3xl font-bold text-violet-400 mb-4">
+                {formatPrice(property.price_per_night ?? property.price)}
               </div>
             </div>
 
             {/* Quick Stats */}
-            <Card className="p-4">
+            <Card className="p-4 bg-slate-800 border-slate-700 text-slate-200">
               <div className="grid grid-cols-3 gap-4 text-center">
                 {property.bedrooms && (
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">{property.bedrooms}</div>
-                    <div className="text-sm text-gray-600">Bedrooms</div>
+                    <div className="text-2xl font-bold text-slate-100">{property.bedrooms}</div>
+                    <div className="text-sm text-slate-400">Bedrooms</div>
                   </div>
                 )}
                 {property.bathrooms && (
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">{property.bathrooms}</div>
-                    <div className="text-sm text-gray-600">Bathrooms</div>
+                    <div className="text-2xl font-bold text-slate-100">{property.bathrooms}</div>
+                    <div className="text-sm text-slate-400">Bathrooms</div>
                   </div>
                 )}
                 {property.squareFootage && (
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">{property.squareFootage.toLocaleString()}</div>
-                    <div className="text-sm text-gray-600">Sq Ft</div>
+                    <div className="text-2xl font-bold text-slate-100">{property.squareFootage.toLocaleString()}</div>
+                    <div className="text-sm text-slate-400">Sq Ft</div>
                   </div>
                 )}
               </div>
             </Card>
 
             {/* Description */}
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Description</h2>
-              <p className="text-gray-700 leading-relaxed">
+            <Card className="p-6 bg-slate-800 border-slate-700 text-slate-200">
+              <h2 className="text-xl font-semibold text-slate-100 mb-4">Description</h2>
+              <p className="text-slate-300 leading-relaxed">
                 {property.description || 'No description available.'}
               </p>
             </Card>
 
             {/* Amenities */}
             {property.amenities && property.amenities.length > 0 && (
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Amenities</h2>
+              <Card className="p-6 bg-slate-800 border-slate-700 text-slate-200">
+                <h2 className="text-xl font-semibold text-slate-100 mb-4">Amenities</h2>
                 <div className="grid grid-cols-2 gap-2">
                   {property.amenities.map((amenity, index) => (
-                    <div key={index} className="flex items-center text-gray-700">
-                      <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div key={index} className="flex items-center text-slate-300">
+                      <svg className="w-4 h-4 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       {amenity}
@@ -296,22 +335,34 @@ const PublicPropertyDetailsPage = () => {
             )}
 
             {/* Contact CTA */}
-            <Card className="p-6 bg-blue-50">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Interested in this property?</h2>
-              <p className="text-gray-700 mb-4">
-                Contact a realtor to learn more about this property, schedule a viewing, or get assistance with your real estate needs.
+            <Card className="p-6 bg-slate-800 border-slate-700 text-slate-200">
+              <h2 className="text-xl font-semibold text-slate-100 mb-4">About the Realtor</h2>
+              <p className="text-slate-300 mb-4">
+                Listed by:
+              </p>
+              <div className="flex items-center gap-4 mb-4">
+                <img src={(property.realtor_profileImage || '/novaprop-logo.jpeg')} alt={(property.realtor_name || 'Realtor')} className="w-14 h-14 rounded-full object-cover border border-slate-700" />
+                <div>
+                  <div className="font-medium text-slate-100">{property.realtor_name || 'Realtor'}</div>
+                  <div className="text-sm text-slate-400">{property.realtor_email || ''}</div>
+                  <div className="text-sm text-slate-400">{property.realtor_phone || ''}</div>
+                </div>
+              </div>
+
+              <p className="text-slate-300 mb-4">
+                Contacting and booking requires an account. Sign up or log in to message the realtor and request viewings.
               </p>
               <div className="space-y-3">
                 <Link
-                  to="/login"
-                  className="block w-full bg-blue-600 text-white text-center px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  to="/register"
+                  className="block w-full bg-violet-600 text-white text-center px-6 py-3 rounded-lg hover:bg-violet-700 transition-colors font-medium"
                 >
-                  Contact Realtor
+                  Sign up to contact
                 </Link>
                 <Button
                   onClick={() => shareProperty('copy')}
                   variant="outline"
-                  className="w-full"
+                  className="w-full text-slate-200 border-slate-600"
                 >
                   Share Property
                 </Button>

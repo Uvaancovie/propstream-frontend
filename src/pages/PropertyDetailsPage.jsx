@@ -163,11 +163,11 @@ const PropertyDetailsPage = () => {
                     <span>{property.address}, {property.city}</span>
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <StarIcon className="w-5 h-5 text-yellow-400 fill-current" />
-                  <span className="text-lg font-semibold text-gray-900 ml-1">4.8</span>
-                  <span className="text-gray-600 ml-1">(24 reviews)</span>
-                </div>
+                  <div className="flex items-center">
+                    <StarIcon className="w-5 h-5 text-yellow-400 fill-current" />
+                    <span className="text-lg font-semibold text-gray-900 ml-1">4.8</span>
+                    <span className="text-gray-600 ml-1">(24 reviews)</span>
+                  </div>
               </div>
 
               {/* Property Stats */}
@@ -221,6 +221,15 @@ const PropertyDetailsPage = () => {
                   R{property.pricePerNight}
                   <span className="text-lg font-normal text-gray-600">/night</span>
                 </div>
+                {/* Edit listing CTA for realtors */}
+                {property.realtor_id && localStorage.getItem('user') && JSON.parse(localStorage.getItem('user')).id === property.realtor_id && (
+                  <button
+                    onClick={() => window.location.href = '/properties'}
+                    className="mt-3 inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
+                  >
+                    Edit Listing
+                  </button>
+                )}
                 <div className="flex items-center justify-center">
                   <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />
                   <span className="text-sm text-gray-600 ml-1">4.8 (24 reviews)</span>

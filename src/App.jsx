@@ -26,6 +26,7 @@ import PublicPropertyDetailsPage from './pages/PublicPropertyDetailsPage';
 import BrowsePropertiesPage from './pages/BrowsePropertiesPage';
 import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import AIStudioPage from './pages/AIStudioPage';
+import UserProfile from './pages/UserProfile';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -127,6 +128,16 @@ function App() {
                     <PropnovaLanding />
                   </PublicRoute>
                 } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <UserProfile />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
               />
 
               {/* Public property routes - available to all */}

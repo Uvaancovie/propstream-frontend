@@ -88,6 +88,14 @@ const Hero = ({ email, isSubmitted, isSubmitting, handleEmailChange, handleSubmi
                         Login
                       </Button>
                     </Link>
+                    <Link to="/browse" className="sm:w-auto">
+                      <Button 
+                        variant="ghost"
+                        className="text-white border border-white/10 hover:bg-white/5 w-full sm:w-auto whitespace-nowrap h-12 px-6 text-lg font-medium"
+                      >
+                        Browse Properties
+                      </Button>
+                    </Link>
                   </div>
                   <p className="text-slate-300 text-center lg:text-left">or join our waitlist:</p>
                   <form key="waitlist-form" onSubmit={handleSubmit} className="max-w-md mx-auto lg:mx-0">
