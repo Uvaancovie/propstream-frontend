@@ -3,6 +3,17 @@ import { useParams, Link } from 'react-router-dom';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { useAuth } from '../contexts/AuthContext';
+
+// API base helper and image normalizer (shared fallback for relative URLs)
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+const normalizeImageUrl = (url) => {
+  if (!url) return '/novaprop-logo.jpeg';
+  if (/^(https?:)?\/\//i.test(url) || url.startsWith('data:')) return url;
+  const apiHost = API_BASE.replace(/\/+api\/?$/i, '').replace(/\/+$/,'');
+  if (url.startsWith('/')) return `${apiHost}${url}`;
+  return `${apiHost}/${url}`;
+};
 
 const PublicPropertyDetailsPage = () => {
   const { slug } = useParams();
@@ -122,7 +133,7 @@ const PublicPropertyDetailsPage = () => {
             </svg>
             <h3 className="text-lg font-semibold text-slate-100 mb-2">Property Not Found</h3>
             <p className="text-slate-400 mb-4">
-              The property you're looking for doesn't exist or is no longer available.
+              The property you're looking for doesn't exist, is not publicly listed, or has been removed.
             </p>
             <Link to="/browse" className="text-blue-400 hover:text-blue-300 font-medium">
               ← Back to Properties
@@ -337,11 +348,11 @@ const PublicPropertyDetailsPage = () => {
             {/* Contact CTA */}
             <Card className="p-6 bg-slate-800 border-slate-700 text-slate-200">
               <h2 className="text-xl font-semibold text-slate-100 mb-4">About the Realtor</h2>
-              <p className="text-slate-300 mb-4">
-                Listed by:
-              </p>
+              <div className="text-slate-300 mb-4">
+                  Listed by:
+                </div>
               <div className="flex items-center gap-4 mb-4">
-                <img src={(property.realtor_profileImage || '/novaprop-logo.jpeg')} alt={(property.realtor_name || 'Realtor')} className="w-14 h-14 rounded-full object-cover border border-slate-700" />
+                <img src={normalizeImageUrl(property.realtor_profileImage || '/novaprop-logo.jpeg')} alt={(property.realtor_name || 'Realtor')} className="w-14 h-14 rounded-full object-cover border border-slate-700" />
                 <div>
                   <div className="font-medium text-slate-100">{property.realtor_name || 'Realtor'}</div>
                   <div className="text-sm text-slate-400">{property.realtor_email || ''}</div>
@@ -352,21 +363,7 @@ const PublicPropertyDetailsPage = () => {
               <p className="text-slate-300 mb-4">
                 Contacting and booking requires an account. Sign up or log in to message the realtor and request viewings.
               </p>
-              <div className="space-y-3">
-                <Link
-                  to="/register"
-                  className="block w-full bg-violet-600 text-white text-center px-6 py-3 rounded-lg hover:bg-violet-700 transition-colors font-medium"
-                >
-                  Sign up to contact
-                </Link>
-                <Button
-                  onClick={() => shareProperty('copy')}
-                  variant="outline"
-                  className="w-full text-slate-200 border-slate-600"
-                >
-                  Share Property
-                </Button>
-              </div>
+              <AuthCTA property={property} />
             </Card>
           </div>
         </div>
@@ -376,3 +373,38 @@ const PublicPropertyDetailsPage = () => {
 };
 
 export default PublicPropertyDetailsPage;
+
+// Small component to render CTA for authenticated users vs guests
+const AuthCTA = ({ property }) => {
+  const { user, isAuthenticated } = useAuth();
+
+  if (!property) return null;
+
+  return (
+    <div className="space-y-3">
+      {isAuthenticated ? (
+        <Link
+          to={`/property/${property.public_slug || property._id}/book`}
+          className="block w-full bg-violet-600 text-white text-center px-6 py-3 rounded-lg hover:bg-violet-700 transition-colors font-medium"
+        >
+          Book Now
+        </Link>
+      ) : (
+        <Link
+          to="/register"
+          className="block w-full bg-violet-600 text-white text-center px-6 py-3 rounded-lg hover:bg-violet-700 transition-colors font-medium"
+        >
+          Sign up to contact
+        </Link>
+      )}
+
+      <Button
+        onClick={() => navigator.clipboard && navigator.clipboard.writeText(window.location.href)}
+        variant="outline"
+        className="w-full text-slate-200 border-slate-600"
+      >
+        Share Property
+      </Button>
+    </div>
+  );
+};

@@ -54,7 +54,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
     // Redirect based on user role
     if (user?.role === 'client') {
-      return <Navigate to="/browse-properties" replace />;
+  return <Navigate to="/browse" replace />;
     } else {
       return <Navigate to="/dashboard" replace />;
     }
@@ -144,7 +144,7 @@ function App() {
               <Route path="/browse" element={<PublicPropertiesPage />} />
               <Route path="/property/:slug" element={<PublicPropertyDetailsPage />} />
               <Route 
-                path="/browse-properties" 
+                path="/browse" 
                 element={
                   <AppLayout>
                     {/* Allow both authenticated and unauthenticated users to access this page */}

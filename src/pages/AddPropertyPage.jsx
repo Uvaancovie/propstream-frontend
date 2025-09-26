@@ -163,7 +163,7 @@ const AddPropertyPage = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h2>
           <p className="text-gray-600 mb-6">Only realtors can add properties.</p>
           <button
-            onClick={() => navigate('/browse-properties')}
+            onClick={() => navigate('/browse')}
             className="btn btn-primary"
           >
             Browse Properties Instead
@@ -480,5 +480,18 @@ const AddPropertyPage = () => {
     </div>
   );
 };
+
+async function aiSuggest() {
+  const r = await fetch(`${import.meta.env.VITE_API_URL}/ai/properties/assist`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ bullets, city, bedrooms, bathrooms, highlights }),
+  });
+  const j = await r.json();
+  setTitle(j.title || title);
+  setDescription(j.description || description);
+  setAmenities(j.amenities || amenities);
+}
+
 
 export default AddPropertyPage;

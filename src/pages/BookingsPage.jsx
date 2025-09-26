@@ -198,7 +198,7 @@ const BookingsPage = () => {
             </p>
             {filter === 'all' && (
               <button
-                onClick={() => window.location.href = '/browse-properties'}
+                onClick={() => window.location.href = '/browse'}
                 className="mt-4 bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors"
               >
                 Browse Properties

@@ -13,6 +13,17 @@ import {
   HomeIcon
 } from '@heroicons/react/24/outline';
 
+// Base API URL used for normalizing image urls when backend returns relative paths
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+
+const normalizeImageUrl = (url) => {
+  if (!url) return '/novaprop-logo.jpeg';
+  if (/^(https?:)?\/\//i.test(url) || url.startsWith('data:')) return url;
+  const apiHost = API_BASE.replace(/\/+api\/?$/i, '').replace(/\/+$/,'');
+  if (url.startsWith('/')) return `${apiHost}${url}`;
+  return `${apiHost}/${url}`;
+};
+
 const BrowsePropertiesPage = () => {
   const { user } = useAuth();
   const [properties, setProperties] = useState([]);
@@ -69,12 +80,12 @@ const BrowsePropertiesPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#0B0B0E] text-slate-200 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Browse Properties</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold text-slate-100 mb-4">Browse Properties</h1>
+          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
             Discover amazing properties for your next stay. From luxury villas to cozy cabins, 
             find the perfect place for your getaway.
           </p>
@@ -82,14 +93,14 @@ const BrowsePropertiesPage = () => {
 
         {/* Search */}
         <div className="mb-8">
-          <div className="relative max-w-md mx-auto">
-            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-3 text-gray-400" />
+            <div className="relative max-w-md mx-auto">
+            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-3 text-slate-400" />
             <input
               type="text"
               placeholder="Search properties by name, city, or address..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="pl-10 w-full px-4 py-2 border border-slate-700 rounded-lg bg-slate-800 text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
         </div>
@@ -110,10 +121,10 @@ const BrowsePropertiesPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProperties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
+                {filteredProperties.map((property) => (
+                  <PropertyCard key={property._id || property.id} property={property} />
+                ))}
+              </div>
         )}
 
         {/* Newsletter Signup */}
@@ -126,23 +137,31 @@ const BrowsePropertiesPage = () => {
 };
 
 const PropertyCard = ({ property }) => {
+  // Use public_slug when available. Only expose details/book links for public properties.
+  const publicId = property.public_slug || (property.is_public ? (property._id || property.id) : null);
+  const price = property.price_per_night ?? property.price;
+  const formattedPrice = price ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0 }).format(price) : 'Contact for pricing';
+
+  // Use realtor profile image if available
+  const realtorImg = property.realtor_profileImage || property.realtor?.profileImage || property.owner?.profileImage || null;
+
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+    <div className="bg-slate-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-slate-700">
       {/* Property Image */}
-      <div className="h-48 bg-gradient-to-br from-primary-100 to-primary-200 relative">
+      <div className="h-48 bg-gradient-to-br from-slate-700 to-slate-800 relative">
         {property.images && property.images.length > 0 ? (
           <img
-            src={property.images[0]}
-            alt={property.name}
+            src={normalizeImageUrl(property.images[0])}
+            alt={property.name || property.title}
             className="w-full h-full object-cover"
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <HomeIcon className="h-16 w-16 text-primary-400" />
+            <HomeIcon className="h-16 w-16 text-slate-400" />
           </div>
         )}
         <div className="absolute top-4 right-4">
-          <span className="bg-white bg-opacity-90 text-primary-700 px-2 py-1 rounded-full text-sm font-medium">
+          <span className="bg-black bg-opacity-40 text-slate-100 px-2 py-1 rounded-full text-sm font-medium">
             Property
           </span>
         </div>
@@ -150,85 +169,78 @@ const PropertyCard = ({ property }) => {
 
       {/* Property Details */}
       <div className="p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          {property.name}
+        <h3 className="text-xl font-semibold text-slate-100 mb-2">
+          {property.name || property.title}
         </h3>
-        
-        <div className="flex items-center text-gray-600 mb-3">
+
+        <div className="flex items-center text-slate-400 mb-3">
           <MapPinIcon className="h-4 w-4 mr-1" />
           <span className="text-sm">{property.city}</span>
         </div>
 
         {property.description && (
-          <p className="text-gray-700 text-sm mb-4 line-clamp-2">
+          <p className="text-slate-300 text-sm mb-4 line-clamp-2">
             {property.description}
           </p>
         )}
 
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center text-green-600">
+          <div className="flex items-center text-emerald-400">
             <CurrencyDollarIcon className="h-5 w-5 mr-1" />
-            <span className="font-semibold">
-              ${property.price_per_night ? `${property.price_per_night}/night` : 'Contact for pricing'}
-            </span>
+            <span className="font-semibold">{formattedPrice}{price ? '/night' : ''}</span>
           </div>
         </div>
 
         {/* Property Stats */}
-        <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
+        <div className="flex items-center justify-between mb-4 text-sm text-slate-400">
           <span>{property.max_guests} guests</span>
           <span>{property.bedrooms} bed</span>
           <span>{property.bathrooms} bath</span>
         </div>
 
         {/* Realtor Info */}
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+        <div className="mb-4 p-3 bg-slate-900 rounded-lg">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center mr-3">
-              <span className="text-white text-sm font-medium">
-                {(property.realtorName || property.realtor_name) ? (property.realtorName || property.realtor_name).charAt(0) : 'R'}
-              </span>
+            <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center mr-3 overflow-hidden border border-slate-700">
+              {realtorImg ? (
+                <img src={normalizeImageUrl(realtorImg)} alt={property.realtor?.name || property.owner?.name || 'Realtor'} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white text-sm font-medium">{(property.realtorName || property.realtor_name || property.realtor?.name || 'R').charAt(0)}</span>
+              )}
             </div>
             <div className="flex-1">
-              <div className="text-sm font-medium text-gray-900">
-                {property.realtorName || property.realtor_name || 'Professional Realtor'}
-              </div>
-              <div className="text-xs text-gray-600 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <a href={`mailto:${property.realtorEmail || property.realtor_email || ''}`} className="hover:text-primary-600 hover:underline">
-                  {property.realtorEmail || property.realtor_email || 'Contact for information'}
-                </a>
-              </div>
-              {(property.realtorPhone || property.realtor_phone) && (
-                <div className="text-xs text-gray-600 flex items-center mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                  <a href={`tel:${property.realtorPhone || property.realtor_phone || ''}`} className="hover:text-primary-600 hover:underline">
-                    {property.realtorPhone || property.realtor_phone}
-                  </a>
-                </div>
-              )}
+              <div className="text-sm font-medium text-slate-100">{property.realtor?.name || property.owner?.name || property.realtorName || property.realtor_name || 'Realtor'}</div>
+              <div className="text-xs text-slate-400 truncate max-w-[10rem]">{property.realtor?.bio || property.owner?.bio || ''}</div>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex space-x-3">
-          <Link
-            to={`/property/${property.id}`}
-            className="flex-1 bg-primary-600 text-white text-center py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
-          >
-            View Details
-          </Link>
-          <Link
-            to={`/property/${property.id}/book`}
-            className="flex items-center justify-center px-4 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
-          >
-            <CalendarIcon className="h-4 w-4" />
-          </Link>
+          {publicId ? (
+            <>
+              <Link
+                to={`/property/${publicId}`}
+                className="flex-1 bg-blue-600 text-white text-center py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                View Details
+              </Link>
+              <Link
+                to={`/property/${publicId}/book`}
+                className="flex items-center justify-center px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50/5 transition-colors"
+              >
+                <CalendarIcon className="h-4 w-4" />
+              </Link>
+            </>
+          ) : (
+            // If property is not public (no public slug), prompt user to sign up to view/book
+            <button
+              onClick={() => window.location.assign('/register')}
+              className="flex-1 bg-violet-600 text-white text-center py-2 px-4 rounded-lg hover:bg-violet-700 transition-colors text-sm font-medium"
+            >
+              Sign up to view
+            </button>
+          )}
         </div>
       </div>
     </div>

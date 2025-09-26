@@ -29,8 +29,9 @@ const Navbar = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['client', 'realtor'] },
     { name: 'Profile', href: '/profile', icon: UserCircleIcon, roles: ['client', 'realtor'] },
-  { name: 'Browse Properties', href: '/browse-properties', icon: BuildingOfficeIcon, roles: ['client'] },
-  { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, roles: ['client'] },
+    // Use a single 'Browse' entry that points to the public browse page for clients
+    { name: 'Browse', href: '/browse', icon: BuildingOfficeIcon, roles: ['client'] },
+    { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, roles: ['client'] },
     { name: 'Properties', href: '/properties', icon: BuildingOfficeIcon, roles: ['realtor'] },
     { name: 'AI Studio', href: '/ai-studio', icon: SparklesIcon, roles: ['realtor'] },
     { name: 'Bookings', href: '/bookings', icon: CalendarDaysIcon, roles: ['client', 'realtor'] },

@@ -66,7 +66,7 @@ const Dashboard = () => {
           )}
           {user.role === 'client' && (
             <>
-              <Link to="/browse-properties">
+              <Link to="/browse">
                 <Button className="bg-violet-600 hover:bg-violet-700 text-white">
                   Browse Properties
                 </Button>
@@ -310,7 +310,7 @@ const Dashboard = () => {
     {
       title: 'Browse Properties',
       description: 'Find your perfect stay',
-      href: '/browse-properties',
+  href: '/browse',
       icon: BuildingOfficeIcon,
       color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
     },

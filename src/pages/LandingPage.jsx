@@ -89,9 +89,8 @@ const Hero = ({ email, isSubmitted, isSubmitting, handleEmailChange, handleSubmi
                       </Button>
                     </Link>
                     <Link to="/browse" className="sm:w-auto">
-                      <Button 
-                        variant="ghost"
-                        className="text-white border border-white/10 hover:bg-white/5 w-full sm:w-auto whitespace-nowrap h-12 px-6 text-lg font-medium"
+                      <Button
+                        className="bg-slate-900/80 hover:bg-slate-800 text-white border border-slate-700 w-full sm:w-auto whitespace-nowrap h-12 px-6 text-lg font-medium"
                       >
                         Browse Properties
                       </Button>
