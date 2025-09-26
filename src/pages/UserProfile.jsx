@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { authAPI, handleAPIError } from '../services/api';
+import { billingAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -15,6 +16,8 @@ export default function UserProfile() {
   const [bioInput, setBioInput] = useState('');
   const [profileImageFile, setProfileImageFile] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
+  const [subscription, setSubscription] = useState(null);
+  const [startingTrial, setStartingTrial] = useState(false);
 
   // Backend origin derived from API_BASE_URL (strip trailing /api)
   const backendOrigin = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000').replace(/\/api\/?$/, '');
@@ -34,6 +37,13 @@ export default function UserProfile() {
       try {
         const p = await authAPI.getProfile();
         const s = await authAPI.getStats();
+        // fetch subscription info
+        try {
+          const subResp = await billingAPI.getSubscription();
+          if (mounted) setSubscription(subResp.subscription || null);
+        } catch (e) {
+          console.warn('Failed to load subscription', e);
+        }
         if (!mounted) return;
         const userProfile = p.user || p;
         setProfile(userProfile);
@@ -110,9 +120,29 @@ export default function UserProfile() {
                   <div>
                     <div className="text-lg text-white font-semibold">Manage billing & subscriptions</div>
                     <div className="text-sm text-slate-400">View invoices and payment methods</div>
+                    {subscription ? (
+                      <div className="text-sm text-slate-300 mt-1">Subscription status: {subscription.status}</div>
+                    ) : (
+                      <div className="text-sm text-slate-300 mt-1">No active subscription — start your 14-day free trial.</div>
+                    )}
                   </div>
                   <div>
-                    <a href="/billing" className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-white">Open Billing</a>
+                    <a href="/billing" className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-white mr-2">Open Billing</a>
+                    {!subscription && (
+                      <button onClick={async () => {
+                        if (!window.confirm('Start a 14-day free trial for your organization?')) return;
+                        setStartingTrial(true);
+                        try {
+                          const res = await billingAPI.startTrial({ planId: 'starter' });
+                          setSubscription(res.subscription || null);
+                          toast.success('Trial started — 14 days free');
+                        } catch (err) {
+                          handleAPIError(err);
+                        } finally {
+                          setStartingTrial(false);
+                        }
+                      }} disabled={startingTrial} className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white">{startingTrial ? 'Starting...' : 'Start Trial'}</button>
+                    )}
                   </div>
                 </div>
               </div>

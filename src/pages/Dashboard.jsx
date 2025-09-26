@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import { propertiesAPI, bookingsAPI } from '../services/api';
+import { propertiesAPI, bookingsAPI, billingAPI } from '../services/api';
 import { seedDemoData, getPropertiesFromStorage } from '../utils/seedData';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Button } from '../components/ui/button';
@@ -31,11 +31,44 @@ const Dashboard = () => {
     // Only fetch dashboard data when user is loaded
     if (user) {
       console.log('🚀 User loaded, fetching dashboard data:', user);
+      fetchSubscription();
       fetchDashboardData();
     } else {
       console.log('⏳ Waiting for user data...');
     }
   }, [user]);
+
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  const [startingTrial, setStartingTrial] = useState(false);
+
+  const fetchSubscription = async () => {
+    try {
+      const res = await billingAPI.getSubscription();
+      setSubscriptionInfo(res.subscription || null);
+    } catch (err) {
+      console.warn('Could not fetch subscription info', err);
+      setSubscriptionInfo(null);
+    }
+  };
+
+  const handleStartTrial = async () => {
+    if (!window.confirm('Start a 14-day free trial for your organization?')) return;
+    setStartingTrial(true);
+    try {
+      const res = await billingAPI.startTrial({ planId: 'starter' });
+      if (res && res.subscription) {
+        setSubscriptionInfo(res.subscription);
+        alert('Trial started — you have 14 days free.');
+      } else {
+        alert('Trial started.');
+      }
+    } catch (err) {
+      console.error('start trial error', err);
+      alert('Unable to start trial: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setStartingTrial(false);
+    }
+  };
 
   // Welcome section component based on user role
   const WelcomeSection = () => {
@@ -62,6 +95,12 @@ const Dashboard = () => {
                   View Calendar
                 </Button>
               </Link>
+              {/* Trial CTA */}
+              {!subscriptionInfo || subscriptionInfo.status === 'trialing' || subscriptionInfo.status === 'trial_expired' ? (
+                <Button onClick={handleStartTrial} disabled={startingTrial} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                  {startingTrial ? 'Starting...' : 'Start 14-day Free Trial'}
+                </Button>
+              ) : null}
             </>
           )}
           {user.role === 'client' && (

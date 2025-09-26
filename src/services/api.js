@@ -245,6 +245,11 @@ export const billingAPI = {
     const response = await api.get('/billing/subscription');
     return response.data;
   }
+  ,
+  startTrial: async (payload = {}) => {
+    const response = await api.post('/billing/start-trial', payload);
+    return response.data;
+  }
 };
 
 // Newsletter API calls
