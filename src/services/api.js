@@ -237,12 +237,12 @@ export const waitlistAPI = {
 // Billing API calls
 export const billingAPI = {
   createSession: async (sessionData) => {
-    const response = await api.post('/billing/payfast/session', sessionData);
+    const response = await api.post('/billing/subscribe', sessionData);
     return response.data;
   },
   
   getSubscription: async () => {
-    const response = await api.get('/billing/me');
+    const response = await api.get('/billing/subscription');
     return response.data;
   }
 };

@@ -18,61 +18,44 @@ const BillingPage = () => {
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
 
+  // Server-truth plans (keep in sync with backend/src/domain/plans.js)
   const plans = [
     {
       id: 'starter',
       name: 'Starter',
-      price: 'R99',
+      priceZar: 149,
       period: '/month',
       description: 'Perfect for individual property owners',
       features: [
-        'Up to 3 properties',
+        'Up to 5 properties',
         'Basic calendar sync',
         'Message templates',
         'Email support',
         'Mobile app access'
       ],
       popular: false,
-      priceId: 'starter_monthly'
     },
     {
-      id: 'professional',
-      name: 'Professional',
-      price: 'R299',
+      id: 'growth',
+      name: 'Growth',
+      priceZar: 199,
       period: '/month',
       description: 'Ideal for growing property portfolios',
       features: [
-        'Up to 15 properties',
+        'Up to 10 properties',
         'Advanced calendar sync',
         'Automated messaging',
         'Priority support',
-        'Analytics dashboard',
-        'Multi-platform integration',
-        'Custom branding'
+        'Analytics dashboard'
       ],
       popular: true,
-      priceId: 'professional_monthly'
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: 'R699',
-      period: '/month',
-      description: 'For large property management companies',
-      features: [
-        'Unlimited properties',
-        'White-label solution',
-        'Advanced automation',
-        'Dedicated support',
-        'Custom integrations',
-        'Team collaboration',
-        'Advanced reporting',
-        'API access'
-      ],
-      popular: false,
-      priceId: 'enterprise_monthly'
     }
   ];
+
+  const formatZAR = (v) => {
+    const n = Number(v) || 0;
+    return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(n);
+  };
 
   useEffect(() => {
     fetchSubscription();
@@ -80,12 +63,35 @@ const BillingPage = () => {
 
   const fetchSubscription = async () => {
     try {
-      const response = await api.get('/api/billing/subscription');
-      setSubscription(response.data);
+      const response = await api.get('/billing/subscription');
+      // response.data -> { subscription: Subscription|null, organization: Organization|null }
+      const sub = response.data && response.data.subscription ? response.data.subscription : null;
+      const org = response.data && response.data.organization ? response.data.organization : null;
+
+      if (!sub && !org) {
+        setSubscription(null);
+      } else {
+        const planId = (org && org.planId) || (sub && sub.planId) || null;
+        const planObj = plans.find(p => p.id === planId) || null;
+        const view = {
+          planId,
+          planName: planObj ? planObj.name : (planId || ''),
+          amount: planObj ? planObj.priceZar : (sub && sub.amount) || 0,
+          status: (org && org.subscriptionStatus) || (sub && sub.status) || 'inactive',
+          startDate: sub && sub.createdAt ? sub.createdAt : (org && org.createdAt) || null,
+          nextBillingDate: null,
+          endDate: null
+        };
+        setSubscription(view);
+      }
     } catch (error) {
-      console.error('Error fetching subscription:', error);
-      // User might not have a subscription yet
-      setSubscription(null);
+      // If backend responds 400 when there's no org/user info, treat as no subscription
+      if (error.response?.status === 400) {
+        setSubscription(null);
+      } else {
+        console.error('Error fetching subscription:', error);
+        setSubscription(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -94,19 +100,35 @@ const BillingPage = () => {
   const handleSubscribe = async (planId) => {
     setProcessingPayment(true);
     try {
-      const response = await api.post('/api/billing/subscribe', { 
+      const response = await api.post('/billing/subscribe', {
         planId,
         returnUrl: window.location.origin + '/billing',
         cancelUrl: window.location.origin + '/billing'
       });
-      
-      // Redirect to Payfast payment page
-      if (response.data.paymentUrl) {
-        window.location.href = response.data.paymentUrl;
+
+      // Redirect to PayFast payment page (backend returns { redirect })
+      if (response.data && response.data.redirect) {
+        window.location.href = response.data.redirect;
+        return;
+      }
+
+      // Fallback: try checkout hosted flow
+      const hosted = await api.post(`/billing/checkout/${planId}`);
+      const html = hosted.data;
+      if (html && typeof html === 'string') {
+        const w = window.open('', '_self');
+        w.document.write(html);
+        w.document.close();
       }
     } catch (error) {
       console.error('Error creating subscription:', error);
-      alert('Error processing payment. Please try again.');
+      if (error.response?.status === 400) {
+        alert('Unable to create subscription: please ensure you are signed in and your organization is set up.');
+      } else if (error.response?.status === 500 && error.response?.data?.missing) {
+        alert('Billing is not configured on the server. Missing: ' + (error.response.data.missing || []).join(', '));
+      } else {
+        alert('Error processing payment. Please try again.');
+      }
     } finally {
       setProcessingPayment(false);
     }
@@ -115,7 +137,7 @@ const BillingPage = () => {
   const handleCancelSubscription = async () => {
     if (window.confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.')) {
       try {
-        await api.post('/api/billing/cancel');
+  await api.post('/billing/cancel');
         fetchSubscription();
         alert('Subscription cancelled successfully.');
       } catch (error) {
@@ -193,8 +215,8 @@ const BillingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-medium text-gray-900">{subscription.planName}</h3>
-                <p className="text-2xl font-bold text-primary-600">R{subscription.amount}</p>
+                <h3 className="text-lg font-medium text-gray-900">{subscription?.planName}</h3>
+                <p className="text-2xl font-bold text-primary-600">{subscription && subscription.amount ? formatZAR(subscription.amount) : ''}</p>
                 <p className="text-sm text-gray-600">per month</p>
               </div>
               
@@ -282,7 +304,7 @@ const BillingPage = () => {
                 <h3 className="text-xl font-semibold text-gray-900">{plan.name}</h3>
                 <p className="text-sm text-gray-600 mt-1">{plan.description}</p>
                 <div className="mt-4">
-                  <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
+                  <span className="text-3xl font-bold text-gray-900">{formatZAR(plan.priceZar)}</span>
                   <span className="text-gray-600">{plan.period}</span>
                 </div>
               </div>
@@ -297,12 +319,12 @@ const BillingPage = () => {
               </ul>
 
               <button
-                onClick={() => handleSubscribe(plan.priceId)}
-                disabled={processingPayment || (subscription && subscription.planId === plan.priceId && subscription.status === 'active')}
+                onClick={() => handleSubscribe(plan.id)}
+                disabled={processingPayment || (subscription && subscription.planId === plan.id && subscription.status === 'active')}
                 className={`w-full btn ${
                   plan.popular ? 'btn-primary' : 'btn-secondary'
                 } ${
-                  subscription && subscription.planId === plan.priceId && subscription.status === 'active'
+                  subscription && subscription.planId === plan.id && subscription.status === 'active'
                     ? 'opacity-50 cursor-not-allowed'
                     : ''
                 }`}
@@ -312,7 +334,7 @@ const BillingPage = () => {
                     <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                     <span>Processing...</span>
                   </div>
-                ) : subscription && subscription.planId === plan.priceId && subscription.status === 'active' ? (
+                ) : subscription && subscription.planId === plan.id && subscription.status === 'active' ? (
                   'Current Plan'
                 ) : subscription ? (
                   'Switch Plan'
