@@ -16,6 +16,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { startCheckout } from '../lib/billing';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -189,7 +190,7 @@ const PropnovaLanding = () => {
               🚀 Be the first to know when Propnova launches! Get exclusive early access.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 size="lg"
                 variant="outline"

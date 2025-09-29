@@ -27,6 +27,7 @@ import BrowsePropertiesPage from './pages/BrowsePropertiesPage';
 import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import AIStudioPage from './pages/AIStudioPage';
 import UserProfile from './pages/UserProfile';
+import BillingReturn from './pages/BillingReturn';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -251,6 +252,16 @@ function App() {
                     </AppLayout>
                   </ProtectedRoute>
                 } 
+              />
+              <Route 
+                path="/billing/return" 
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <BillingReturn />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
               />
 
               {/* Catch all route */}
