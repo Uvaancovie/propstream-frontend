@@ -254,20 +254,63 @@ export const billingAPI = {
 
 // Newsletter API calls
 export const newsletterAPI = {
-  subscribe: async (email) => {
+  // Client actions
+  subscribe: async (payload) => {
+    // if payload is a string assume it's an email
+    if (typeof payload === 'string') payload = { email: payload };
     try {
-      // Try the waitlist API first for new implementation
-      const response = await waitlistAPI.join({ email, source: 'newsletter' });
-      return response;
+      if (payload.realtorId) {
+        const response = await api.post('/newsletter/subscribe', { realtorId: payload.realtorId });
+        return response.data;
+      }
+      // fallback to waitlist join when only email provided
+      if (payload.email) {
+        const response = await waitlistAPI.join({ email: payload.email, source: 'newsletter' });
+        return response;
+      }
+      throw new Error('Invalid payload');
     } catch (error) {
-      // Fall back to legacy newsletter endpoint
-      const response = await api.post('/newsletter/subscribe', { email });
-      return response.data;
+      console.error('newsletter subscribe error', error);
+      throw error;
     }
   },
-  
-  unsubscribe: async (email) => {
-    const response = await api.post('/newsletter/unsubscribe', { email });
+
+  unsubscribe: async (payload) => {
+    if (typeof payload === 'string') payload = { email: payload };
+    try {
+      if (payload.realtorId) {
+        const response = await api.post('/newsletter/unsubscribe', { realtorId: payload.realtorId });
+        return response.data;
+      }
+      if (payload.email) {
+        const response = await api.post('/newsletter/unsubscribe', { email: payload.email });
+        return response.data;
+      }
+      throw new Error('Invalid payload');
+    } catch (error) {
+      console.error('newsletter unsubscribe error', error);
+      throw error;
+    }
+  },
+
+  // Realtor actions
+  getSubscribers: async (page = 1, pageSize = 20) => {
+    const response = await api.get(`/newsletter/subscribers?page=${page}&pageSize=${pageSize}`);
+    return response.data;
+  },
+
+  getSentNewsletters: async (page = 1, pageSize = 20) => {
+    const response = await api.get(`/newsletter/sent?page=${page}&pageSize=${pageSize}`);
+    return response.data;
+  },
+
+  getQuota: async () => {
+    const response = await api.get('/newsletter/quota');
+    return response.data;
+  },
+
+  send: async (newsletterData) => {
+    const response = await api.post('/newsletter/send', newsletterData);
     return response.data;
   }
 };

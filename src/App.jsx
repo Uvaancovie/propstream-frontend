@@ -28,6 +28,9 @@ import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import AIStudioPage from './pages/AIStudioPage';
 import UserProfile from './pages/UserProfile';
 import BillingReturn from './pages/BillingReturn';
+import RealtorNewsletterPage from './pages/RealtorNewsletterPage';
+import NewsInboxPage from './pages/NewsInboxPage';
+import RealtorNewsPage from './pages/RealtorNewsPage';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -216,7 +219,7 @@ function App() {
               <Route 
                 path="/property/:propertyId/book" 
                 element={
-                  <ProtectedRoute allowedRoles={['client']}>
+                  <ProtectedRoute>
                     <AppLayout>
                       <BookingPage />
                     </AppLayout>
@@ -232,6 +235,36 @@ function App() {
                     </AppLayout>
                   </ProtectedRoute>
                 } 
+              />
+              <Route 
+                path="/news" 
+                element={
+                  <ProtectedRoute allowedRoles={['client']}>
+                    <AppLayout>
+                      <NewsInboxPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/realtor/news" 
+                element={
+                  <ProtectedRoute allowedRoles={['realtor']}>
+                    <AppLayout>
+                      <RealtorNewsPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/realtor/newsletter" 
+                element={
+                  <ProtectedRoute allowedRoles={['realtor']}>
+                    <AppLayout>
+                      <RealtorNewsletterPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
               />
               <Route 
                 path="/messages" 

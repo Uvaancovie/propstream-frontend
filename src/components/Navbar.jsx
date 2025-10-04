@@ -11,7 +11,8 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
-  SparklesIcon
+  SparklesIcon,
+  NewspaperIcon
 } from '@heroicons/react/24/outline';
 
 const Navbar = () => {
@@ -19,6 +20,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -29,21 +31,24 @@ const Navbar = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['client', 'realtor'] },
     { name: 'Profile', href: '/profile', icon: UserCircleIcon, roles: ['client', 'realtor'] },
-    // Use a single 'Browse' entry that points to the public browse page for clients
     { name: 'Browse', href: '/browse', icon: BuildingOfficeIcon, roles: ['client'] },
+    { name: 'News', href: '/news', icon: NewspaperIcon, roles: ['client'] },
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, roles: ['client'] },
     { name: 'Properties', href: '/properties', icon: BuildingOfficeIcon, roles: ['realtor'] },
     { name: 'AI Studio', href: '/ai-studio', icon: SparklesIcon, roles: ['realtor'] },
+    { name: 'News', href: '/realtor/news', icon: NewspaperIcon, roles: ['realtor'] },
     { name: 'Bookings', href: '/bookings', icon: CalendarDaysIcon, roles: ['client', 'realtor'] },
     { name: 'Calendar', href: '/calendar', icon: CalendarDaysIcon, roles: ['realtor'] },
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, roles: ['realtor'] },
-  { name: 'Billing', href: '/billing', icon: CreditCardIcon, roles: ['client'] },
+    { name: 'Billing', href: '/billing', icon: CreditCardIcon, roles: ['client'] },
   ];
 
   // Filter navigation based on user role
   const filteredNavigation = navigation.filter(item => 
     !item.roles || item.roles.includes(user?.role)
   );
+
+  const isRealtorDashboard = user?.role === 'realtor' && location.pathname.startsWith('/dashboard');
 
   const isActivePath = (path) => location.pathname === path;
 
@@ -109,7 +114,19 @@ const Navbar = () => {
               </Link>
             </div>
             
-            {/* Desktop navigation */}
+            {/* If we are on the realtor dashboard, show a compact header with a modal toggle */}
+            {isRealtorDashboard ? (
+              <div className="ml-4 flex items-center">
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="inline-flex items-center px-3 py-2 border border-slate-700 text-sm leading-4 font-medium rounded-md text-slate-300 hover:text-white hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 transition-colors duration-200"
+                >
+                  <Bars3Icon className="w-5 h-5 mr-2" />
+                  Menu
+                </button>
+              </div>
+            ) : (
+              /* Desktop navigation */
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {/* Always-visible Browse link for everyone */}
                 <Link to="/browse" className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 border-transparent text-slate-300 hover:border-slate-600 hover:text-slate-200">
@@ -135,6 +152,7 @@ const Navbar = () => {
                   );
                 })}
               </div>
+            )}
           </div>
 
           {/* User menu */}
@@ -170,6 +188,60 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* Realtor dashboard modal navigation */}
+      {isRealtorDashboard && modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setModalOpen(false)} />
+          <div className="relative mt-20 w-full max-w-md mx-4 bg-[#0B0B0E] border border-slate-800 rounded-lg shadow-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <img src="/novaprop-logo.jpeg" alt="logo" className="h-8 w-8 rounded-md mr-2" />
+                <h3 className="text-lg font-semibold text-white">Menu</h3>
+              </div>
+              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white">
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {filteredNavigation.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setModalOpen(false)}
+                    className="flex items-center px-3 py-2 rounded-md text-slate-300 hover:bg-slate-800/50"
+                  >
+                    <Icon className="w-5 h-5 mr-3" />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 border-t border-slate-800 pt-4">
+              <div className="flex items-center">
+                <UserCircleIcon className="w-8 h-8 text-slate-400 mr-3" />
+                <div>
+                  <div className="text-sm text-slate-300">{user?.name || 'User'}</div>
+                  <div className="text-xs text-slate-400">{user?.email}</div>
+                </div>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={() => { handleLogout(); setModalOpen(false); }}
+                  className="w-full inline-flex items-center justify-center px-3 py-2 rounded-md border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800/50"
+                >
+                  <ArrowRightOnRectangleIcon className="w-5 h-5 mr-2" />
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile menu */}
       {mobileMenuOpen && (

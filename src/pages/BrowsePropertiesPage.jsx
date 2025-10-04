@@ -12,6 +12,7 @@ import {
   CalendarIcon,
   HomeIcon
 } from '@heroicons/react/24/outline';
+import SubscribeButton from '../components/SubscribeButton';
 
 // Base API URL used for normalizing image urls when backend returns relative paths
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
@@ -215,7 +216,7 @@ const PropertyCard = ({ property }) => {
           </div>
         </div>
 
-        {/* Action Buttons */}
+  {/* Action Buttons */}
         <div className="flex space-x-3">
           {publicId ? (
             <>
@@ -231,6 +232,10 @@ const PropertyCard = ({ property }) => {
               >
                 <CalendarIcon className="h-4 w-4" />
               </Link>
+              {/* Subscribe to realtor newsletter */}
+              <div className="flex items-center">
+                <SubscribeButton realtorId={property.realtorId || property.realtor_id} isSubscribedInitial={!!property.isSubscribedToOwner} />
+              </div>
             </>
           ) : (
             // If property is not public (no public slug), prompt user to sign up to view/book

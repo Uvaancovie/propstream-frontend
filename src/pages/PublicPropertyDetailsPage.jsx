@@ -4,6 +4,7 @@ import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useAuth } from '../contexts/AuthContext';
+import SubscribeButton from '../components/SubscribeButton';
 
 // API base helper and image normalizer (shared fallback for relative URLs)
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
@@ -383,12 +384,17 @@ const AuthCTA = ({ property }) => {
   return (
     <div className="space-y-3">
       {isAuthenticated ? (
-        <Link
-          to={`/property/${property.public_slug || property._id}/book`}
-          className="block w-full bg-violet-600 text-white text-center px-6 py-3 rounded-lg hover:bg-violet-700 transition-colors font-medium"
-        >
-          Book Now
-        </Link>
+        <>
+          <Link
+            to={`/property/${property.public_slug || property._id}/book`}
+            className="block w-full bg-violet-600 text-white text-center px-6 py-3 rounded-lg hover:bg-violet-700 transition-colors font-medium"
+          >
+            Book Now
+          </Link>
+          <div className="mt-2">
+            <SubscribeButton realtorId={property.realtorId || property.realtor_id} isSubscribedInitial={!!property.isSubscribedToOwner} />
+          </div>
+        </>
       ) : (
         <Link
           to="/register"

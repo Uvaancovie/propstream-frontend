@@ -11,6 +11,7 @@ import {
   UserGroupIcon, 
   CurrencyDollarIcon,
   ArrowTrendingUpIcon,
+  SparklesIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
 
@@ -344,6 +345,14 @@ const Dashboard = () => {
       href: '/properties',
       icon: ArrowTrendingUpIcon,
       color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
+    }
+    ,
+    {
+      title: 'Newsletter',
+      description: 'View subscribers and send newsletters',
+      href: '/realtor/newsletter',
+      icon: SparklesIcon,
+      color: 'bg-violet-900/20 text-violet-400 hover:bg-violet-900/30 border border-violet-800/50'
     }
   ] : [
     {
