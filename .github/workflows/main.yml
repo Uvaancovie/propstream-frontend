@@ -68,6 +68,15 @@ jobs:
             exit 1
           fi
 
+      - name: Check dist exists
+        id: check_dist
+        run: |
+          if [ -d "dist" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build backend (optional)
         run: |
           if [ -f backend/package.json ]; then
@@ -82,8 +91,8 @@ jobs:
       - name: Security audit (npm audit)
         run: npm audit --audit-level=moderate || true
 
-      - name: Upload artifacts (frontend build)
-        if: always() && exists('dist')
+      - name: Upload frontend-dist artifact (if present)
+        if: steps.check_dist.outputs.exists == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
