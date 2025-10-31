@@ -43,17 +43,17 @@ const Hero = ({ email, isSubmitted, isSubmitting, handleEmailChange, handleSubmi
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Content */}
           <div className="text-center lg:text-left">
-            <Badge className="bg-violet-700/70 text-white border border-violet-500/40 mb-4">🚀 Launching in 7 Days</Badge>
+            <Badge className="bg-green-700/70 text-white border border-green-500/40 mb-4">✅ Now Live</Badge>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight tracking-tight">
-              <span className="text-white block">Join the PropNova</span>{" "}
+              <span className="text-white block">Post, Manage, and Grow</span>{" "}
               <span className="bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent block">
-                Revolution
+                Your Properties
               </span>
             </h1>
 
             <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl lg:text-xl text-slate-300 max-w-xl mx-auto lg:mx-0">
-              Be among the first to experience the future of property management. Get exclusive early access and save 50% on your first year.
+              Seamlessly post properties, sync calendars, automate bookings, send newsletters, handle messaging, and generate AI-powered listings—all in one platform.
             </p>
 
             <div className="mt-4 sm:mt-6 flex flex-wrap gap-3 sm:gap-4 text-sm text-slate-300 justify-center lg:justify-start">
@@ -68,77 +68,22 @@ const Hero = ({ email, isSubmitted, isSubmitting, handleEmailChange, handleSubmi
               </span>
             </div>
 
-            {/* Waitlist Form */}
-            <div id="waitlist-form" className="mt-6 sm:mt-8 space-y-3">
-              {!isSubmitted ? (
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:justify-center lg:justify-start gap-3">
-                    <Link to="/register" className="sm:w-auto">
-                      <Button 
-                        className="bg-violet-600 hover:bg-violet-700 w-full sm:w-auto whitespace-nowrap h-12 px-8 text-lg font-semibold"
-                      >
-                        Get Started
-                      </Button>
-                    </Link>
-                    <Link to="/login" className="sm:w-auto">
-                      <Button 
-                        variant="outline"
-                        className="border-violet-600/40 hover:border-violet-600 w-full sm:w-auto text-white whitespace-nowrap h-12 px-8 text-lg font-semibold"
-                      >
-                        Login
-                      </Button>
-                    </Link>
-                    <Link to="/browse" className="sm:w-auto">
-                      <Button
-                        className="bg-slate-900/80 hover:bg-slate-800 text-white border border-slate-700 w-full sm:w-auto whitespace-nowrap h-12 px-6 text-lg font-medium"
-                      >
-                        Browse Properties
-                      </Button>
-                    </Link>
-                  </div>
-                  <p className="text-slate-300 text-center lg:text-left">or join our waitlist:</p>
-                  <form key="waitlist-form" onSubmit={handleSubmit} className="max-w-md mx-auto lg:mx-0">
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <input 
-                        ref={inputRef}
-                        type="email" 
-                        required 
-                        value={email}
-                        onChange={handleEmailChange}
-                        placeholder="Enter your email for exclusive early access" 
-                        className="flex-1 bg-[#0F0F13] border border-slate-700 text-white placeholder:text-slate-500 text-lg h-12 px-4 rounded-md outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500" 
-                        disabled={isSubmitting}
-                        autoComplete="email"
-                        autoFocus={false}
-                      />
-                      <Button 
-                        type="submit" 
-                        className="bg-violet-600/30 hover:bg-violet-600/40 whitespace-nowrap h-12 px-8 text-lg font-semibold"
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <CloudLightning className="h-5 w-5 mr-2 animate-spin" />
-                            Joining...
-                          </>
-                        ) : (
-                          <>
-                            Join Waitlist
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              ) : (
-                <div className="bg-green-600/20 border border-green-500/40 rounded-xl p-6 max-w-md mx-auto lg:mx-0">
-                  <CheckCircle className="h-12 w-12 text-green-400 mx-auto lg:mx-0 mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2 text-center lg:text-left">🎉 You're In!</h3>
-                  <p className="text-slate-300 text-center lg:text-left">
-                    Welcome to the PropNova revolution! Check your email for exclusive launch details.
-                  </p>
-                </div>
-              )}
+            {/* Action Buttons */}
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-4 lg:justify-start">
+              <Link to="/register" className="sm:w-auto">
+                <Button 
+                  className="bg-violet-600 hover:bg-violet-700 w-full sm:w-auto whitespace-nowrap h-12 px-8 text-lg font-semibold"
+                >
+                  Get Started Free
+                </Button>
+              </Link>
+              <Button 
+                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                variant="outline"
+                className="border-violet-600/40 hover:border-violet-600 w-full sm:w-auto text-white whitespace-nowrap h-12 px-8 text-lg font-semibold"
+              >
+                View Pricing
+              </Button>
             </div>
 
             <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-slate-400 text-center lg:text-left">
@@ -237,7 +182,7 @@ const Hero = ({ email, isSubmitted, isSubmitting, handleEmailChange, handleSubmi
               {/* Floating stats */}
               <div className="absolute -bottom-4 -left-4 bg-[#0B0B0E] border border-violet-900/40 rounded-xl p-3 shadow-lg hidden sm:block">
                 <div className="text-violet-400 text-xs font-medium">Properties Managed</div>
-                <div className="text-white text-lg font-bold">2,847+</div>
+                <div className="text-white text-lg font-bold">20 +</div>
               </div>
               <div className="absolute -top-4 -right-4 bg-[#0B0B0E] border border-violet-900/40 rounded-xl p-3 shadow-lg hidden sm:block">
                 <div className="text-violet-400 text-xs font-medium">Time Saved</div>
@@ -354,7 +299,7 @@ const LandingPage = () => {
                 alt="NovaProp" 
                 className="h-6 w-6 sm:h-8 sm:w-8 rounded-lg shadow-[0_0_20px_rgba(124,58,237,.45)]" 
               />
-              <span className="text-lg sm:text-xl font-bold text-white">PropNova</span>
+              <span className="text-lg sm:text-xl font-bold text-white">Novaprop</span>
             </Link>
             
             <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
@@ -380,12 +325,6 @@ const LandingPage = () => {
                   Get Started
                 </Button>
               </Link>
-              <Button 
-                onClick={() => document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-violet-600/20 hover:bg-violet-600/30 text-sm lg:text-base px-3 lg:px-4"
-              >
-                ✨ Join Waitlist
-              </Button>
             </div>
             
             <button 
@@ -419,15 +358,6 @@ const LandingPage = () => {
                       Get Started
                     </Button>
                   </Link>
-                  <Button 
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="bg-violet-600/20 hover:bg-violet-600/30 justify-start py-3 w-full"
-                  >
-                    ✨ Join Waitlist
-                  </Button>
                 </div>
               </nav>
             </div>
@@ -445,88 +375,49 @@ const LandingPage = () => {
           <div className="text-center mb-12 sm:mb-16">
             <Badge className="bg-violet-700/70 text-white border border-violet-700/50 mb-4">How It Works</Badge>
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 sm:mb-6">
-              See PropNova in Action
+              See Novaprop in Action
             </h2>
             <p className="text-slate-300 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto">
               Three simple steps to transform your property management workflow
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-            {/* Step 1 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-center"
-            >
-              <div className="relative mb-6">
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-violet-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(124,58,237,.3)]">
-                  <PlugZap className="h-10 w-10 text-white" />
+          {/* How It Works Steps */}
+          <div className="mt-12 sm:mt-16 max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
+              {/* Step 1 */}
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto bg-violet-600/20 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-2xl font-bold text-violet-400">1</span>
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center text-white font-bold text-sm">1</div>
+                <h3 className="text-xl font-bold text-white mb-3">Get Connected</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Integrate your listing platforms seamlessly. Sync calendars across Airbnb, Booking.com, and VRBO in just 120 seconds.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Connect & Sync</h3>
-              <p className="text-slate-300 text-sm sm:text-base">
-                Link your Airbnb, Booking.com, and VRBO accounts in under 2 minutes. Watch as all your calendars sync automatically.
-              </p>
-            </motion.div>
 
-            {/* Step 2 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-center"
-            >
-              <div className="relative mb-6">
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-600 to-cyan-700 rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,.3)]">
-                  <MessageCircle className="h-10 w-10 text-white" />
+              {/* Step 2 */}
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto bg-violet-600/20 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-2xl font-bold text-violet-400">2</span>
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">2</div>
+                <h3 className="text-xl font-bold text-white mb-3">Streamline Operations</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Deploy intelligent automation for guest communications. Let Novaprop manage check-ins, policies, and follow-up messages effortlessly.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Automate Everything</h3>
-              <p className="text-slate-300 text-sm sm:text-base">
-                Set up smart messaging templates and workflows. PropNova handles check-ins, house rules, and follow-ups automatically.
-              </p>
-            </motion.div>
 
-            {/* Step 3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-center"
-            >
-              <div className="relative mb-6">
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-600 to-emerald-700 rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(34,197,94,.3)]">
-                  <BarChart3 className="h-10 w-10 text-white" />
+              {/* Step 3 */}
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto bg-violet-600/20 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-2xl font-bold text-violet-400">3</span>
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">3</div>
+                <h3 className="text-xl font-bold text-white mb-3">Expand & Optimize</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Track key metrics and performance indicators. Scale your business confidently with data-driven insights and reduced operational overhead.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Scale & Grow</h3>
-              <p className="text-slate-300 text-sm sm:text-base">
-                Monitor performance, get insights, and scale your property portfolio with confidence. More properties, less work.
-              </p>
-            </motion.div>
-          </div>
-
-          {/* Demo Video Placeholder */}
-          <div className="mt-12 sm:mt-16 max-w-4xl mx-auto">
-            <Card className="bg-[#0B0B0E] border border-violet-900/40 overflow-hidden">
-              <CardContent className="p-0">
-                <div className="aspect-video w-full bg-gradient-to-br from-[#0E0E12] to-[#141424] relative flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto bg-violet-600/20 rounded-full flex items-center justify-center mb-4">
-                      <Monitor className="h-10 w-10 text-violet-400" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Interactive Demo</h3>
-                    <p className="text-slate-300 mb-4">Watch PropNova in action (Available at launch)</p>
-                    <Badge className="bg-violet-700/70 text-white border border-violet-500/40">Coming September 11</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            </div>
           </div>
         </div>
       </section>
@@ -555,27 +446,39 @@ const LandingPage = () => {
     const features = [
       {
         icon: Monitor,
-        title: "Unified Command Center",
-        desc: "Dashboard that brings all your properties, bookings, and communications into perfect orbit.",
-        bullets: ["Real-time overview", "Smart insights", "Performance metrics"]
+        title: "Property Posting & Management",
+        desc: "Easily post and manage your properties with professional listings and detailed property pages.",
+        bullets: ["Professional listings", "Property details & photos", "Status management"]
       },
       {
         icon: CalendarCheck2,
         title: "Smart Calendar Sync",
-        desc: "Prevent double bookings across Airbnb, Booking.com, and VRBO.",
+        desc: "Prevent double bookings across Airbnb, Booking.com, and VRBO with automatic calendar synchronization.",
         bullets: ["Two-way sync", "Instant date blocking", "Multi-platform alignment"]
       },
       {
-        icon: Send,
-        title: "Auto Messaging That Lands",
-        desc: "Effortless check-ins, house rules and follow-ups—always on time.",
-        bullets: ["SA-ready templates", "Auto-scheduled messages", "Multi-language support"]
+        icon: Users,
+        title: "Booking Management",
+        desc: "Streamline your booking process with automated confirmations and guest management.",
+        bullets: ["Booking requests", "Guest communication", "Automated workflows"]
       },
       {
-        icon: PlugZap,
-        title: "Workflows on Autopilot",
-        desc: "Let PropNova handle the repetitive ops while you scale.",
-        bullets: ["Zapier & Make integration", "Custom cosmic workflows", "Smart notifications"]
+        icon: Send,
+        title: "Newsletter Automation",
+        desc: "Keep your audience engaged with automated newsletters and marketing campaigns.",
+        bullets: ["Email campaigns", "Subscriber management", "Automated sending"]
+      },
+      {
+        icon: MessageCircle,
+        title: "Messaging System",
+        desc: "Professional messaging for guest inquiries, updates, and support communications.",
+        bullets: ["Guest messaging", "Automated responses", "Communication history"]
+      },
+      {
+        icon: Zap,
+        title: "AI Listing Generator",
+        desc: "Generate compelling property descriptions with AI, complete with titles, amenities, and keywords.",
+        bullets: ["AI-powered descriptions", "Generation history", "Saved listings (up to 10)"]
       }
     ];
 
@@ -638,7 +541,7 @@ const LandingPage = () => {
             <div className="text-center lg:text-left">
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 sm:mb-6">Reclaim Your Orbit of Time</h2>
               <p className="text-slate-300 text-base sm:text-lg lg:text-xl mb-6">
-                With PropNova, hosts typically save <span className="text-white font-semibold">5 hours every week</span>—that's <span className="text-white font-semibold">20 hours per month</span>.
+                With Novaprop, hosts typically save <span className="text-white font-semibold">5 hours every week</span>—that's <span className="text-white font-semibold">20 hours per month</span>.
               </p>
               <ul className="space-y-3 sm:space-y-4 text-slate-300 text-sm sm:text-base max-w-md mx-auto lg:mx-0">
                 <li className="flex items-center gap-3">
@@ -675,48 +578,54 @@ const LandingPage = () => {
   const Pricing = () => {
     const plans = [
       {
-        name: "Solo Explorer",
-        price: "Free",
-        period: "14-day trial",
+        name: "Free",
+        price: "R0",
+        period: "forever",
         badge: "✨ Starter",
         features: [
           "Up to 2 properties",
-          "Basic sync & templates", 
-          "Email support",
-          "Core automations"
+          "8 AI listing generations/month",
+          "10 saved listings",
+          "Basic calendar sync",
+          "Email support"
         ]
       },
       {
-        name: "Expanding Orbit", 
+        name: "Growth",
         price: "R199",
         period: "per month",
-        badge: "🚀 Growth",
+        badge: "🚀 Popular",
         popular: true,
         features: [
           "Up to 10 properties",
-          "Advanced automations",
-          "Analytics & reports",
-          "Priority support",
-          "Custom workflows"
+          "15 AI listing generations/month",
+          "10 saved listings",
+          "Advanced calendar sync",
+          "Booking management",
+          "Newsletter automation",
+          "Messaging system",
+          "Priority support"
         ]
       },
       {
-        name: "Galactic Leader",
+        name: "Agency",
         price: "Custom",
         period: "pricing",
-        badge: "🌌 Agency",
+        badge: "🌌 Enterprise",
         features: [
           "Unlimited properties",
-          "White-label options", 
-          "Dedicated support",
+          "Unlimited AI generations",
+          "Unlimited saved listings",
+          "White-label options",
+          "Team management",
           "Custom integrations",
-          "Team management"
+          "Dedicated support"
         ]
       }
     ];
 
     return (
-      <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-[#0A0A0A] to-[#0E0E12]">
+      <section id="pricing" className="py-12 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-[#0A0A0A] to-[#0E0E12]">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 sm:mb-6">
@@ -792,20 +701,24 @@ const LandingPage = () => {
   const FAQ = () => {
     const faqs = [
       {
-        question: "How does calendar sync work?",
-        answer: "Our calendar sync works automatically and reliably. Connect your Airbnb, Booking.com, and VRBO accounts, and PropNova keeps all calendars perfectly aligned in real-time."
+        question: "How does the AI Listing Generator work?",
+        answer: "Our AI generator creates professional property descriptions using advanced AI. Simply input your property details, and get compelling titles, descriptions, amenities, and keywords instantly. Free plan includes 8 generations per month."
+      },
+      {
+        question: "How many properties can I list?",
+        answer: "Free plan: up to 2 properties. Growth plan: up to 10 properties. Agency plan: unlimited properties. All plans include full property management features."
       },
       {
         question: "Is Payfast integration included?",
         answer: "Yes! Payfast is built-in for South African hosts. Accept payments securely with zero additional setup required."
       },
       {
-        question: "How long does setup take?",
-        answer: "Setup takes about 5 minutes. Connect your accounts, customize your messaging templates, and you're ready to automate your property management."
+        question: "How does calendar sync work?",
+        answer: "Our calendar sync works automatically across Airbnb, Booking.com, and VRBO. Connect your accounts, and Novaprop prevents double bookings in real-time."
       },
       {
-        question: "What happens after launch?",
-        answer: "Waitlist members get 50% off their first year, priority onboarding support, and exclusive access to beta features."
+        question: "Can I save generated listings?",
+        answer: "Yes! All plans allow you to save up to 10 generated listings. Edit them, view history, and publish when ready."
       },
       {
         question: "Can I cancel anytime?",
@@ -821,7 +734,7 @@ const LandingPage = () => {
               Frequently Asked Questions
             </h2>
             <p className="text-slate-300 text-lg">
-              Everything you need to know about PropNova
+              Everything you need to know about Novaprop
             </p>
           </div>
 
@@ -861,13 +774,13 @@ const LandingPage = () => {
             <div className="md:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
                 <img src="/novaprop-logo.jpeg" alt="NovaProp" className="h-8 w-8 rounded-lg shadow-[0_0_20px_rgba(124,58,237,.45)]" />
-                <span className="text-xl font-bold text-white">PropNova</span>
+                <span className="text-xl font-bold text-white">Novaprop</span>
               </div>
               <p className="text-slate-400 mb-4">
                 Professional property management made simple. Built for South African hosts and agencies.
               </p>
               <p className="text-slate-500 text-sm">
-                © 2025 PropNova. All rights reserved.
+                © 2025 Novaprop. All rights reserved.
               </p>
             </div>
             

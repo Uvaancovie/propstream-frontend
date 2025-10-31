@@ -12,7 +12,8 @@ import {
   Bars3Icon,
   XMarkIcon,
   SparklesIcon,
-  NewspaperIcon
+  NewspaperIcon,
+  BookmarkIcon
 } from '@heroicons/react/24/outline';
 
 const Navbar = () => {
@@ -36,6 +37,7 @@ const Navbar = () => {
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, roles: ['client'] },
     { name: 'Properties', href: '/properties', icon: BuildingOfficeIcon, roles: ['realtor'] },
     { name: 'AI Studio', href: '/ai-studio', icon: SparklesIcon, roles: ['realtor'] },
+    { name: 'Saved Listings', href: '/saved-listings', icon: BookmarkIcon, roles: ['realtor'] },
     { name: 'News', href: '/realtor/news', icon: NewspaperIcon, roles: ['realtor'] },
     { name: 'Bookings', href: '/bookings', icon: CalendarDaysIcon, roles: ['client', 'realtor'] },
     { name: 'Calendar', href: '/calendar', icon: CalendarDaysIcon, roles: ['realtor'] },

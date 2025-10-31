@@ -25,7 +25,8 @@ import PublicPropertiesPage from './pages/PublicPropertiesPage';
 import PublicPropertyDetailsPage from './pages/PublicPropertyDetailsPage';
 import BrowsePropertiesPage from './pages/BrowsePropertiesPage';
 import PropertyDetailsPage from './pages/PropertyDetailsPage';
-import AIStudioPage from './pages/AIStudioPage';
+import AIGeneratorPage from './pages/AIGeneratorPage';
+import SavedListingsPage from './pages/SavedListingsPage';
 import UserProfile from './pages/UserProfile';
 import BillingReturn from './pages/BillingReturn';
 import RealtorNewsletterPage from './pages/RealtorNewsletterPage';
@@ -201,7 +202,17 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['realtor']}>
                     <AppLayout>
-                      <AIStudioPage />
+                      <AIGeneratorPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/saved-listings" 
+                element={
+                  <ProtectedRoute allowedRoles={['realtor']}>
+                    <AppLayout>
+                      <SavedListingsPage />
                     </AppLayout>
                   </ProtectedRoute>
                 } 

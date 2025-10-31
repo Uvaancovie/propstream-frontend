@@ -150,6 +150,11 @@ export const propertiesAPI = {
   delete: async (id) => {
     const response = await api.delete(`/properties/${id}`);
     return response.data;
+  },
+
+  saveGenerated: async (generatedData) => {
+    const response = await api.post('/properties/save-generated', generatedData);
+    return response.data;
   }
 };
 
@@ -311,6 +316,31 @@ export const newsletterAPI = {
 
   send: async (newsletterData) => {
     const response = await api.post('/newsletter/send', newsletterData);
+    return response.data;
+  }
+};
+
+// AI Generator API
+export const aiAPI = {
+  generate: async (payload) => {
+    // payload: { beds, baths, suburb, price, amenities }
+    const response = await api.post('/ai-generator/generate', payload);
+    return response.data;
+  },
+  getHistory: async () => {
+    const response = await api.get('/ai-generator/history');
+    return response.data;
+  }
+};
+
+// Property API
+export const propertyAPI = {
+  saveListing: async (data) => {
+    const response = await api.post('/properties/save-generated', data);
+    return response.data;
+  },
+  getSavedListings: async () => {
+    const response = await api.get('/properties/saved');
     return response.data;
   }
 };

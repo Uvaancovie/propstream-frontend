@@ -353,6 +353,13 @@ const Dashboard = () => {
       href: '/realtor/newsletter',
       icon: SparklesIcon,
       color: 'bg-violet-900/20 text-violet-400 hover:bg-violet-900/30 border border-violet-800/50'
+    },
+    {
+      title: 'AI Listing Generator',
+      description: 'Create compelling property descriptions with AI.',
+      href: '/ai-studio',
+      icon: SparklesIcon,
+      color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
     }
   ] : [
     {

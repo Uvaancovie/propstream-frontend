@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
-    "build": "vite build",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
+  "dev": "vite --host",
+  "build": "vite build",
+  "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+  "lint:ci": "eslint \"src/**/*.{js,jsx,ts,tsx}\" \"backend/**/*.{js,ts}\" \"*.js\" --report-unused-disable-directives --max-warnings 0",
+  "preview": "vite preview",
     "deploy:prepare": "node -e \"require('fs').copyFileSync('.env.production', '.env')\"",
     "deploy": "npm run deploy:prepare && git add . && git commit -m \"Deploy update\" && git push"
   },
