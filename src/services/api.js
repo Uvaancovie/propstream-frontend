@@ -249,6 +249,11 @@ export const billingAPI = {
   getSubscription: async () => {
     const response = await api.get('/billing/subscription');
     return response.data;
+  },
+  
+  getUsage: async () => {
+    const response = await api.get('/me/summary');
+    return response.data;
   }
   ,
   startTrial: async (payload = {}) => {

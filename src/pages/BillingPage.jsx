@@ -15,23 +15,24 @@ import {
 
 const BillingPage = () => {
   const [subscription, setSubscription] = useState(null);
+  const [usage, setUsage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
 
   // Server-truth plans (keep in sync with backend/src/domain/plans.js)
   const plans = [
     {
-      id: 'starter',
-      name: 'Starter',
-      priceZar: 149,
-      period: '/month',
-      description: 'Perfect for individual property owners',
+      id: 'free',
+      name: 'Free',
+      priceZar: 0,
+      period: 'forever',
+      description: 'Get started with basic features',
       features: [
-        'Up to 5 properties',
+        'Up to 2 properties',
+        '8 AI listing generations/month',
+        '10 saved listings',
         'Basic calendar sync',
-        'Message templates',
-        'Email support',
-        'Mobile app access'
+        'Email support'
       ],
       popular: false,
     },
@@ -40,15 +41,35 @@ const BillingPage = () => {
       name: 'Growth',
       priceZar: 199,
       period: '/month',
-      description: 'Ideal for growing property portfolios',
+      description: 'Perfect for growing property portfolios',
       features: [
         'Up to 10 properties',
+        '15 AI listing generations/month',
+        '10 saved listings',
         'Advanced calendar sync',
-        'Automated messaging',
-        'Priority support',
-        'Analytics dashboard'
+        'Booking management',
+        'Newsletter automation',
+        'Messaging system',
+        'Priority support'
       ],
       popular: true,
+    },
+    {
+      id: 'agency',
+      name: 'Agency',
+      priceZar: null,
+      period: 'custom pricing',
+      description: 'For large agencies and enterprises',
+      features: [
+        'Unlimited properties',
+        'Unlimited AI generations',
+        'Unlimited saved listings',
+        'White-label options',
+        'Team management',
+        'Custom integrations',
+        'Dedicated support'
+      ],
+      popular: false,
     }
   ];
 
@@ -63,10 +84,14 @@ const BillingPage = () => {
 
   const fetchSubscription = async () => {
     try {
-      const response = await api.get('/billing/subscription');
-      // response.data -> { subscription: Subscription|null, organization: Organization|null }
-      const sub = response.data && response.data.subscription ? response.data.subscription : null;
-      const org = response.data && response.data.organization ? response.data.organization : null;
+      const [subscriptionResponse, usageResponse] = await Promise.all([
+        api.get('/billing/subscription'),
+        api.get('/me/summary')
+      ]);
+      
+      // Process subscription data
+      const sub = subscriptionResponse.data && subscriptionResponse.data.subscription ? subscriptionResponse.data.subscription : null;
+      const org = subscriptionResponse.data && subscriptionResponse.data.organization ? subscriptionResponse.data.organization : null;
 
       if (!sub && !org) {
         setSubscription(null);
@@ -84,13 +109,20 @@ const BillingPage = () => {
         };
         setSubscription(view);
       }
+
+      // Process usage data
+      if (usageResponse.data && usageResponse.data.usage) {
+        setUsage(usageResponse.data.usage);
+      }
     } catch (error) {
       // If backend responds 400 when there's no org/user info, treat as no subscription
       if (error.response?.status === 400) {
         setSubscription(null);
+        setUsage({ properties: { used: 0, max: 2 }, aiGenerations: { used: 0, max: 8 }, savedListings: { used: 0, max: 10 } });
       } else {
         console.error('Error fetching subscription:', error);
         setSubscription(null);
+        setUsage({ properties: { used: 0, max: 2 }, aiGenerations: { used: 0, max: 8 }, savedListings: { used: 0, max: 10 } });
       }
     } finally {
       setLoading(false);
@@ -98,6 +130,12 @@ const BillingPage = () => {
   };
 
   const handleSubscribe = async (planId) => {
+    // Handle custom pricing plans
+    if (planId === 'agency') {
+      window.location.href = '/contact';
+      return;
+    }
+
     setProcessingPayment(true);
     try {
       const response = await api.post('/billing/subscribe', {
@@ -192,17 +230,20 @@ const BillingPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Billing & Subscription</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-white">Billing & Subscription</h1>
+        <p className="mt-2 text-white">
           Manage your subscription and billing information
         </p>
       </div>
 
       {/* Current Subscription Status */}
       {subscription && (
-        <div className="card mb-8">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Current Subscription</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Current Plan: {subscription?.planName}</h2>
+              <p className="text-gray-600 mt-1">Manage your subscription and view usage</p>
+            </div>
             <button
               onClick={fetchSubscription}
               className="btn btn-secondary text-sm flex items-center space-x-1"
@@ -212,107 +253,173 @@ const BillingPage = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">{subscription?.planName}</h3>
-                <p className="text-2xl font-bold text-primary-600">{subscription && subscription.amount ? formatZAR(subscription.amount) : ''}</p>
-                <p className="text-sm text-gray-600">per month</p>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                {React.createElement(getStatusIcon(subscription.status), {
-                  className: "w-5 h-5"
-                })}
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${getStatusColor(subscription.status)}`}>
-                  {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
-                </span>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Plan Overview */}
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Plan Details</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Status</span>
+                  <div className="flex items-center space-x-2">
+                    {React.createElement(getStatusIcon(subscription.status), {
+                      className: "w-4 h-4"
+                    })}
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(subscription.status)}`}>
+                      {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Price</span>
+                  <span className="font-semibold text-gray-900">
+                    {subscription && subscription.amount ? formatZAR(subscription.amount) : 'Free'}/month
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Started</span>
+                  <span className="text-sm text-gray-900">{formatDate(subscription.startDate)}</span>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center text-sm text-gray-600">
-                <CalendarDaysIcon className="w-4 h-4 mr-2" />
-                <span>Started: {formatDate(subscription.startDate)}</span>
-              </div>
-              {subscription.nextBillingDate && (
-                <div className="flex items-center text-sm text-gray-600">
-                  <CurrencyDollarIcon className="w-4 h-4 mr-2" />
-                  <span>Next billing: {formatDate(subscription.nextBillingDate)}</span>
-                </div>
-              )}
-              {subscription.endDate && (
-                <div className="flex items-center text-sm text-gray-600">
-                  <ExclamationTriangleIcon className="w-4 h-4 mr-2" />
-                  <span>Ends: {formatDate(subscription.endDate)}</span>
-                </div>
-              )}
+            {/* Usage & Limits */}
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-semibold text-black mb-3">Usage & Limits</h3>
+              {(() => {
+                const currentPlan = plans.find(p => p.id === subscription.planId);
+                if (!currentPlan) return <p className="text-gray-500 text-sm">Plan details unavailable</p>;
+
+                return (
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-black">Properties</span>
+                        <span className="font-medium text-black">{usage?.properties?.used || 0} / {usage?.properties?.max || currentPlan.features.find(f => f.includes('properties'))?.replace('Up to ', '').replace(' properties', '') || '∞'}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                          style={{width: `${Math.min(((usage?.properties?.used || 0) / (usage?.properties?.max || 1)) * 100, 100)}%`}}
+                        ></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-black">AI Generations</span>
+                        <span className="font-medium text-black">{usage?.aiGenerations?.used || 0} / {usage?.aiGenerations?.max || currentPlan.features.find(f => f.includes('AI'))?.replace(' AI listing generations/month', '') || '∞'}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-600 h-2 rounded-full transition-all duration-300" 
+                          style={{width: `${Math.min(((usage?.aiGenerations?.used || 0) / (usage?.aiGenerations?.max || 1)) * 100, 100)}%`}}
+                        ></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-black">Saved Listings</span>
+                        <span className="font-medium text-black">{usage?.savedListings?.used || 0} / {usage?.savedListings?.max || currentPlan.features.find(f => f.includes('saved listings'))?.replace(' saved listings', '') || '∞'}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-purple-600 h-2 rounded-full transition-all duration-300" 
+                          style={{width: `${Math.min(((usage?.savedListings?.used || 0) / (usage?.savedListings?.max || 1)) * 100, 100)}%`}}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
-            <div className="space-y-2">
-              {subscription.status === 'active' && (
+            {/* Actions */}
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Actions</h3>
+              <div className="space-y-3">
+                {subscription.status === 'active' && (
+                  <button
+                    onClick={handleCancelSubscription}
+                    className="w-full btn btn-danger text-sm"
+                  >
+                    Cancel Subscription
+                  </button>
+                )}
+                {subscription.status === 'cancelled' && subscription.endDate && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-sm text-yellow-800">
+                      Your subscription will end on {formatDate(subscription.endDate)}.
+                      You can reactivate by choosing a plan below.
+                    </p>
+                  </div>
+                )}
                 <button
-                  onClick={handleCancelSubscription}
-                  className="w-full btn btn-danger text-sm"
+                  onClick={() => document.getElementById('plans-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="w-full btn btn-primary text-sm"
                 >
-                  Cancel Subscription
+                  {subscription.planId === 'free' ? 'Upgrade Plan' : 'Change Plan'}
                 </button>
-              )}
-              {subscription.status === 'cancelled' && subscription.endDate && (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <p className="text-sm text-yellow-800">
-                    Your subscription will end on {formatDate(subscription.endDate)}. 
-                    You can reactivate by choosing a plan below.
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {/* Subscription Plans */}
-      <div className="card">
+      <div id="plans-section" className="card">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {subscription ? 'Upgrade Your Plan' : 'Choose Your Plan'}
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            {subscription ? 'Ready to Upgrade?' : 'Choose Your Plan'}
           </h2>
-          <p className="mt-2 text-gray-600">
-            Select the perfect plan for your property management needs
+          <p className="text-gray-600 text-lg">
+            {subscription ? 'Unlock more features and grow your property business' : 'Select the perfect plan for your property management needs'}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {plans.map((plan) => (
-            <div 
-              key={plan.id} 
-              className={`relative rounded-lg border-2 p-6 ${
-                plan.popular 
-                  ? 'border-primary-500 shadow-lg' 
-                  : 'border-gray-200'
+            <div
+              key={plan.id}
+              className={`relative rounded-xl border-2 p-6 transition-all duration-200 ${
+                plan.popular
+                  ? 'border-blue-500 shadow-xl shadow-blue-100 bg-gradient-to-b from-blue-50 to-white'
+                  : 'border-gray-200 hover:border-gray-300 bg-white'
+              } ${
+                subscription && subscription.planId === plan.id
+                  ? 'ring-2 ring-green-500 border-green-500'
+                  : ''
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-primary-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
                     Most Popular
                   </span>
                 </div>
               )}
 
+              {subscription && subscription.planId === plan.id && (
+                <div className="absolute -top-4 right-4">
+                  <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                    Current Plan
+                  </span>
+                </div>
+              )}
+
               <div className="text-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">{plan.name}</h3>
-                <p className="text-sm text-gray-600 mt-1">{plan.description}</p>
-                <div className="mt-4">
-                  <span className="text-3xl font-bold text-gray-900">{formatZAR(plan.priceZar)}</span>
-                  <span className="text-gray-600">{plan.period}</span>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                <p className="text-gray-600 text-sm mb-4">{plan.description}</p>
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-gray-900">
+                    {plan.priceZar === null ? 'Custom' : formatZAR(plan.priceZar)}
+                  </span>
+                  <span className="text-gray-600 text-lg">/{plan.period.replace('/', '')}</span>
                 </div>
               </div>
 
-              <ul className="space-y-3 mb-6">
+              <ul className="space-y-3 mb-8">
                 {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-center text-sm text-gray-600">
-                    <CheckCircleIcon className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                  <li key={index} className="flex items-start text-sm text-gray-600">
+                    <CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -321,11 +428,13 @@ const BillingPage = () => {
               <button
                 onClick={() => handleSubscribe(plan.id)}
                 disabled={processingPayment || (subscription && subscription.planId === plan.id && subscription.status === 'active')}
-                className={`w-full btn ${
-                  plan.popular ? 'btn-primary' : 'btn-secondary'
+                className={`w-full py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${
+                  plan.popular
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
+                    : 'bg-gray-900 hover:bg-gray-800 text-white'
                 } ${
                   subscription && subscription.planId === plan.id && subscription.status === 'active'
-                    ? 'opacity-50 cursor-not-allowed'
+                    ? 'opacity-50 cursor-not-allowed bg-green-600 hover:bg-green-600'
                     : ''
                 }`}
               >
@@ -335,11 +444,11 @@ const BillingPage = () => {
                     <span>Processing...</span>
                   </div>
                 ) : subscription && subscription.planId === plan.id && subscription.status === 'active' ? (
-                  'Current Plan'
+                  'Current Plan ✓'
                 ) : subscription ? (
-                  'Switch Plan'
+                  plan.priceZar > (subscription.amount || 0) ? 'Upgrade Now' : 'Change Plan'
                 ) : (
-                  'Get Started'
+                  plan.priceZar === null ? 'Contact Sales' : 'Get Started'
                 )}
               </button>
             </div>
