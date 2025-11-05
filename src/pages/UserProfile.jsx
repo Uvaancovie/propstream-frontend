@@ -109,25 +109,30 @@ export default function UserProfile() {
                     <div className="text-sm text-slate-400">{stats?.aiUsage?.tokens ?? 0} tokens</div>
                   </div>
                   <div>
-                    <button className="bg-violet-600 hover:bg-violet-700 px-4 py-2 rounded text-white">Upgrade</button>
+                    <a href="/billing?intent=upgrade" className="bg-violet-600 hover:bg-violet-700 px-4 py-2 rounded text-white">Upgrade</a>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 p-4 bg-slate-800 rounded">
-                <div className="text-sm text-slate-400">Billing</div>
+              <div className="mt-6 p-4 bg-gradient-to-r from-violet-900/30 to-purple-900/30 border border-violet-700/50 rounded">
+                <div className="text-sm text-violet-300 font-medium">Current Plan & Billing</div>
                 <div className="mt-2 flex items-center justify-between">
                   <div>
-                    <div className="text-lg text-white font-semibold">Manage billing & subscriptions</div>
-                    <div className="text-sm text-slate-400">View invoices and payment methods</div>
+                    <div className="text-lg text-white font-semibold">
+                      {subscription?.planId ? subscription.planId.charAt(0).toUpperCase() + subscription.planId.slice(1) : 'Free'} Plan
+                    </div>
+                    <div className="text-sm text-slate-400">Manage subscriptions and view usage</div>
                     {subscription ? (
-                      <div className="text-sm text-slate-300 mt-1">Subscription status: {subscription.status}</div>
+                      <div className="text-sm text-green-400 mt-1 flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                        Active subscription
+                      </div>
                     ) : (
-                      <div className="text-sm text-slate-300 mt-1">No active subscription — start your 14-day free trial.</div>
+                      <div className="text-sm text-yellow-400 mt-1">No active subscription — upgrade now</div>
                     )}
                   </div>
                   <div>
-                    <a href="/billing" className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-white mr-2">Open Billing</a>
+                    <a href="/billing" className="bg-violet-600 hover:bg-violet-700 px-4 py-2 rounded text-white font-medium transition-colors">Manage Billing</a>
                     {!subscription && (
                       <button onClick={async () => {
                         if (!window.confirm('Start a 14-day free trial for your organization?')) return;

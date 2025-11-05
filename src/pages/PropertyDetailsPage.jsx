@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   BuildingOfficeIcon,
   MapPinIcon,
@@ -18,9 +21,11 @@ import {
 const PropertyDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [guestEmail, setGuestEmail] = useState('');
 
   useEffect(() => {
     fetchProperty();
@@ -39,6 +44,17 @@ const PropertyDetailsPage = () => {
   };
 
   const handleBookNow = () => {
+    // If not authenticated, redirect to register with email prefill
+    if (!user) {
+      if (!guestEmail || !guestEmail.includes('@')) {
+        alert('Please enter a valid email address');
+        return;
+      }
+      navigate(`/register?role=client&email=${encodeURIComponent(guestEmail)}&redirect=/property/${id}/book`);
+      return;
+    }
+    
+    // If authenticated, proceed to booking
     navigate(`/property/${id}/book`);
   };
 
@@ -238,6 +254,23 @@ const PropertyDetailsPage = () => {
 
               {/* Quick booking form preview */}
               <div className="space-y-4 mb-6">
+                {!user && (
+                  <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Enter your email to continue
+                    </label>
+                    <Input
+                      type="email"
+                      placeholder="your@email.com"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      We'll create an account for you to manage your booking
+                    </p>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="border border-gray-300 rounded-lg p-3">
                     <label className="text-xs font-medium text-gray-700 uppercase tracking-wide">Check-in</label>
@@ -259,7 +292,7 @@ const PropertyDetailsPage = () => {
                 className="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold text-lg flex items-center justify-center"
               >
                 <CalendarIcon className="w-5 h-5 mr-2" />
-                Reserve Now
+                {user ? 'Reserve Now' : 'Continue'}
               </button>
 
               <div className="text-center mt-4">

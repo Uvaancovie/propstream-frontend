@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import toast from 'react-hot-toast';
 import { 
   CreditCardIcon,
   CheckCircleIcon,
@@ -14,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const BillingPage = () => {
+  const [searchParams] = useSearchParams();
   const [subscription, setSubscription] = useState(null);
   const [usage, setUsage] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -80,6 +83,19 @@ const BillingPage = () => {
 
   useEffect(() => {
     fetchSubscription();
+    
+    // Check for upgrade intent
+    const intent = searchParams.get('intent');
+    const reason = searchParams.get('reason');
+    if (intent === 'upgrade' && reason === 'limit') {
+      toast.error('You\'ve reached your plan limit. Please upgrade to continue.', {
+        duration: 5000
+      });
+      // Scroll to plans section
+      setTimeout(() => {
+        document.getElementById('plans-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 500);
+    }
   }, []);
 
   const fetchSubscription = async () => {
@@ -168,6 +184,35 @@ const BillingPage = () => {
         alert('Error processing payment. Please try again.');
       }
     } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const handleTopup = async (credits) => {
+    try {
+      setProcessingPayment(true);
+      const response = await api.post('/billing/ai-topup', { credits });
+      
+      if (response.data.redirect && response.data.payload) {
+        // Create a form and submit to PayFast
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = response.data.redirect;
+        
+        Object.keys(response.data.payload).forEach(key => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = response.data.payload[key];
+          form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+      }
+    } catch (error) {
+      console.error('Error initiating top-up:', error);
+      toast.error(error.response?.data?.message || 'Failed to initiate top-up');
       setProcessingPayment(false);
     }
   };
@@ -455,6 +500,60 @@ const BillingPage = () => {
           ))}
         </div>
       </div>
+
+      {/* AI Credits Top-Up */}
+      {subscription && subscription.planId !== 'free' && (
+        <div className="card mt-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-black mb-2">Need More AI Credits?</h2>
+            <p className="text-gray-600">Purchase one-time credit top-ups for additional AI generations</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* 100 Credits */}
+            <div className="border-2 border-violet-200 rounded-lg p-6 hover:border-violet-400 transition-colors">
+              <div className="text-center mb-4">
+                <div className="text-4xl font-bold text-violet-600 mb-2">
+                  {formatZAR(49)}
+                </div>
+                <div className="text-gray-600">100 AI Credits</div>
+              </div>
+              <button
+                onClick={() => handleTopup(100)}
+                className="w-full btn bg-violet-600 hover:bg-violet-700 text-white"
+              >
+                Purchase 100 Credits
+              </button>
+            </div>
+
+            {/* 250 Credits */}
+            <div className="border-2 border-violet-400 rounded-lg p-6 bg-violet-50 hover:border-violet-500 transition-colors relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                  BEST VALUE
+                </span>
+              </div>
+              <div className="text-center mb-4">
+                <div className="text-4xl font-bold text-violet-600 mb-2">
+                  {formatZAR(99)}
+                </div>
+                <div className="text-gray-600">250 AI Credits</div>
+                <div className="text-sm text-green-600 font-medium mt-1">Save R24!</div>
+              </div>
+              <button
+                onClick={() => handleTopup(250)}
+                className="w-full btn bg-violet-600 hover:bg-violet-700 text-white"
+              >
+                Purchase 250 Credits
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-6 text-center text-sm text-gray-500">
+            <p>Credits are added to your account immediately after payment and don't expire.</p>
+          </div>
+        </div>
+      )}
 
       {/* Payment Information */}
       <div className="card mt-8">

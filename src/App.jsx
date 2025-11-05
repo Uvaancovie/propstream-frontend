@@ -28,6 +28,8 @@ import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import AIGeneratorPage from './pages/AIGeneratorPage';
 import SavedListingsPage from './pages/SavedListingsPage';
 import UserProfile from './pages/UserProfile';
+import AdminDashboard from './pages/AdminDashboard';
+import DemoPage from './pages/DemoPage';
 import BillingReturn from './pages/BillingReturn';
 import RealtorNewsletterPage from './pages/RealtorNewsletterPage';
 import NewsInboxPage from './pages/NewsInboxPage';
@@ -144,6 +146,10 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route 
+                path="/demo" 
+                element={<DemoPage />} 
+              />
 
               {/* Public property routes - available to all */}
               <Route path="/browse" element={<PublicPropertiesPage />} />
@@ -213,6 +219,16 @@ function App() {
                   <ProtectedRoute allowedRoles={['realtor']}>
                     <AppLayout>
                       <SavedListingsPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                    <AppLayout>
+                      <AdminDashboard />
                     </AppLayout>
                   </ProtectedRoute>
                 } 

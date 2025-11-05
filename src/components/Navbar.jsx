@@ -65,10 +65,10 @@ const Navbar = () => {
               <Link to="/" className="flex items-center">
                 <img 
                   src="/novaprop-logo.jpeg" 
-                  alt="NovaProp" 
+                  alt="Nova Prop" 
                   className="h-8 w-8 rounded-lg shadow-[0_0_15px_rgba(124,58,237,.35)]" 
                 />
-                <span className="ml-2 text-xl font-bold text-white">PropNova</span>
+                <span className="ml-2 text-xl font-bold text-white">Nova Prop</span>
               </Link>
             </div>
             
@@ -109,10 +109,10 @@ const Navbar = () => {
               <Link to="/dashboard" className="flex items-center">
                 <img 
                   src="/novaprop-logo.jpeg" 
-                  alt="NovaProp" 
+                  alt="Nova Prop" 
                   className="h-8 w-8 rounded-lg shadow-[0_0_15px_rgba(124,58,237,.35)]" 
                 />
-                <span className="ml-2 text-xl font-bold text-white">PropNova</span>
+                <span className="ml-2 text-xl font-bold text-white">Nova Prop</span>
               </Link>
             </div>
             

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { aiAPI, propertyAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import UsageBadge from '../components/UsageBadge';
 import { SparklesIcon, ClipboardDocumentIcon, ClipboardDocumentCheckIcon, HomeIcon, CurrencyDollarIcon, MapPinIcon, WrenchScrewdriverIcon, BookmarkIcon } from '@heroicons/react/24/outline';
 
 // --- Helper Components ---
@@ -77,6 +79,8 @@ const AIGeneratorPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const navigate = useNavigate();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -88,6 +92,13 @@ const AIGeneratorPage = () => {
       toast.success('Content generated successfully!');
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'An error occurred.';
+      
+      // Handle 402 - limit exceeded
+      if (error.response?.status === 402) {
+        navigate('/billing?intent=upgrade&reason=limit');
+        return;
+      }
+      
       toast.error(errorMessage);
       if (error.response?.data?.usage) {
         setUsage(error.response.data.usage);
@@ -224,11 +235,17 @@ const AIGeneratorPage = () => {
               </form>
             </div>
             {usage && (
-              <div className="bg-slate-800/80 p-6 rounded-xl border border-slate-700 shadow-xl">
-                <h3 className="text-lg font-semibold mb-4">Monthly Usage</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <StatCard label="Used" value={usage.count} limit={usage.limit} icon={SparklesIcon} />
-                  <StatCard label="Remaining" value={usage.limit - usage.count} limit={usage.limit} icon={HomeIcon} />
+              <div className="space-y-4">
+                <UsageBadge 
+                  used={usage.count} 
+                  limit={usage.limit} 
+                  label="AI Generations This Month"
+                />
+                <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                  <div className="grid grid-cols-2 gap-4">
+                    <StatCard label="Used" value={usage.count} limit={usage.limit} icon={SparklesIcon} />
+                    <StatCard label="Remaining" value={usage.limit - usage.count} limit={usage.limit} icon={HomeIcon} />
+                  </div>
                 </div>
               </div>
             )}

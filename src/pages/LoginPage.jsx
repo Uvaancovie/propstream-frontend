@@ -71,7 +71,7 @@ const LoginPage = () => {
               alt="NovaProp" 
               className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg shadow-[0_0_20px_rgba(124,58,237,.45)]" 
             />
-            <span className="text-3xl font-bold text-white ml-3">PropNova</span>
+            <span className="text-3xl font-bold text-white ml-3">Nova Prop</span>
           </Link>
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold text-white">

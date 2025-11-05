@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { EyeIcon, EyeSlashIcon, UserIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 
 const RegisterPage = () => {
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
+    email: searchParams.get('email') || '',
     password: '',
     confirmPassword: '',
-    role: 'client'
+    role: searchParams.get('role') || 'client'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -81,8 +82,13 @@ const RegisterPage = () => {
       });
       
       if (result.success) {
-        // Always redirect to dashboard after successful registration
-        navigate('/dashboard');
+        // Check if there's a redirect URL from query params
+        const redirectTo = searchParams.get('redirect');
+        if (redirectTo) {
+          navigate(redirectTo);
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setErrors({ general: result.error });
       }
@@ -103,7 +109,7 @@ const RegisterPage = () => {
               alt="NovaProp" 
               className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg shadow-[0_0_20px_rgba(124,58,237,.45)]" 
             />
-            <span className="text-3xl font-bold text-white ml-3">PropNova</span>
+            <span className="text-3xl font-bold text-white ml-3">Nova Prop</span>
           </Link>
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold text-white">

@@ -388,14 +388,14 @@ const Dashboard = () => {
   const recentActivity = user?.role === 'realtor' ? [
     {
       type: 'info',
-      message: 'Welcome to PropNova! Start by adding your first property.',
+      message: 'Welcome to Nova Prop! Start by adding your first property.',
       time: 'Just now',
       icon: BuildingOfficeIcon
     }
   ] : [
     {
       type: 'info',
-      message: 'Welcome to PropNova! Start by browsing amazing properties.',
+      message: 'Welcome to Nova Prop! Start by browsing amazing properties.',
       time: 'Just now',
       icon: BuildingOfficeIcon
     }

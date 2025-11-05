@@ -31,18 +31,18 @@ const NovapropLanding = () => {
             <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">Novaprop</span>
+            <span className="text-xl font-bold text-gray-900">Nova Prop</span>
           </div>
           
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#features" className="text-gray-600 hover:text-violet-600 transition-colors">Features</a>
-            <a href="#demo" className="text-gray-600 hover:text-violet-600 transition-colors">Demo</a>
-            <a href="#faq" className="text-gray-600 hover:text-violet-600 transition-colors">FAQ</a>
+            <a href="/#features" className="text-gray-600 hover:text-violet-600 transition-colors">Features</a>
+            <a href="/#demo" className="text-gray-600 hover:text-violet-600 transition-colors">Demo</a>
+            <a href="/#faq" className="text-gray-600 hover:text-violet-600 transition-colors">FAQ</a>
             <Button 
-              onClick={() => window.location.href = '/register'}
+              onClick={() => window.location.href = '/signup'}
               className="bg-violet-600 hover:bg-violet-700"
             >
-              Get Started
+              Start Free
             </Button>
           </nav>
         </div>
@@ -90,18 +90,18 @@ const NovapropLanding = () => {
               <Button 
                 size="lg"
                 className="bg-violet-600 hover:bg-violet-700"
-                onClick={() => window.location.href = '/register'}
+                onClick={() => window.location.href = '/signup'}
               >
-                Get Started Free
+                Start Free
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
               <Button 
                 size="lg"
-                variant="outline"
-                onClick={() => startCheckout('growth')}
-                className="border-violet-200 text-violet-600 hover:bg-violet-50"
+                variant="secondary"
+                onClick={() => window.location.href = '/demo'}
+                className="border-violet-200 text-violet-700 hover:bg-violet-700 hover:text-white"
               >
-                View Pricing
+                Book a Demo
               </Button>
             </div>
 
