@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { propertiesAPI, bookingsAPI, billingAPI } from '../services/api';
 import { seedDemoData, getPropertiesFromStorage } from '../utils/seedData';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -17,6 +17,11 @@ import {
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
+  
+  // Redirect owners/admins to admin dashboard
+  if (user && (user.role === 'owner' || user.role === 'admin')) {
+    return <Navigate to="/admin" replace />;
+  }
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     properties: [],
@@ -31,11 +36,8 @@ const Dashboard = () => {
   useEffect(() => {
     // Only fetch dashboard data when user is loaded
     if (user) {
-      console.log('🚀 User loaded, fetching dashboard data:', user);
       fetchSubscription();
       fetchDashboardData();
-    } else {
-      console.log('⏳ Waiting for user data...');
     }
   }, [user]);
 
@@ -451,7 +453,6 @@ const Dashboard = () => {
     );
   }
 
-  // Show message if user is not loaded yet
   if (!user) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

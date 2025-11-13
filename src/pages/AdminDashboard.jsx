@@ -28,7 +28,15 @@ const AdminDashboard = () => {
       const response = await api.get('/admin/metrics');
       setMetrics(response.data);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load metrics');
+      const errorMessage = err.response?.data?.message || 'Failed to load metrics';
+      
+      // Add helpful message for 403 errors
+      if (err.response?.status === 403) {
+        setError('Access denied. Please logout and login again to refresh your permissions.');
+      } else {
+        setError(errorMessage);
+      }
+      
       console.error('Metrics fetch error:', err);
     } finally {
       setLoading(false);
@@ -50,8 +58,26 @@ const AdminDashboard = () => {
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-700">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h2 className="text-xl font-bold text-red-800 mb-2">⚠️ Access Error</h2>
+          <p className="text-red-700 mb-4">{error}</p>
+          <div className="bg-red-100 border-l-4 border-red-500 p-4 mb-4">
+            <h3 className="font-semibold text-red-800 mb-2">How to fix:</h3>
+            <ol className="list-decimal list-inside text-red-700 space-y-1">
+              <li>Click logout in the top right</li>
+              <li>Login again with your credentials</li>
+              <li>Navigate back to /admin</li>
+            </ol>
+          </div>
+          <button
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = '/login';
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+          >
+            Logout & Clear Cache
+          </button>
         </div>
       </div>
     );

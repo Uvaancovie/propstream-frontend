@@ -29,6 +29,7 @@ import AIGeneratorPage from './pages/AIGeneratorPage';
 import SavedListingsPage from './pages/SavedListingsPage';
 import UserProfile from './pages/UserProfile';
 import AdminDashboard from './pages/AdminDashboard';
+import OwnerRealtorInsights from './pages/OwnerRealtorInsights';
 import DemoPage from './pages/DemoPage';
 import BillingReturn from './pages/BillingReturn';
 import RealtorNewsletterPage from './pages/RealtorNewsletterPage';
@@ -176,7 +177,7 @@ function App() {
               <Route 
                 path="/dashboard" 
                 element={
-                  <ProtectedRoute allowedRoles={['realtor', 'client', 'admin']}>
+                  <ProtectedRoute allowedRoles={['realtor', 'client', 'admin', 'owner']}>
                     <AppLayout>
                       <Dashboard />
                     </AppLayout>
@@ -226,12 +227,22 @@ function App() {
               <Route 
                 path="/admin" 
                 element={
-                  <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                  <ProtectedRoute allowedRoles={['owner', 'admin', 'realtor']}>
                     <AppLayout>
                       <AdminDashboard />
                     </AppLayout>
                   </ProtectedRoute>
                 } 
+              />
+              <Route
+                path="/owner/realtor-insights"
+                element={
+                  <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                    <AppLayout>
+                      <OwnerRealtorInsights />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
               />
               <Route 
                 path="/bookings" 

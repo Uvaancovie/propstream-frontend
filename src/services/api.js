@@ -375,6 +375,11 @@ export const adminAPI = {
   approveWaitlist: async (waitlistId) => {
     const response = await api.put(`/admin/waitlist/${waitlistId}/approve`);
     return response.data;
+  },
+
+  getOwnerRealtorInsights: async () => {
+    const response = await api.get('/admin/owner/realtor-insights');
+    return response.data;
   }
 };
 

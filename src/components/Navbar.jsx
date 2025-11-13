@@ -14,7 +14,8 @@ import {
   SparklesIcon,
   NewspaperIcon,
   BookmarkIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 
 const Navbar = () => {
@@ -33,7 +34,14 @@ const Navbar = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['client', 'realtor', 'owner', 'admin'] },
     { name: 'Profile', href: '/profile', icon: UserCircleIcon, roles: ['client', 'realtor', 'owner', 'admin'] },
-    { name: 'Admin', href: '/admin', icon: ChartBarIcon, roles: ['owner', 'admin'] },
+    { name: 'Admin', href: '/admin', icon: ChartBarIcon, roles: ['owner', 'admin', 'realtor'] },
+    {
+      name: 'Realtor Insights',
+      href: '/owner/realtor-insights',
+      icon: UserGroupIcon,
+      roles: ['owner', 'admin'],
+      email: 'way2flyagency@gmail.com'
+    },
     { name: 'Browse', href: '/browse', icon: BuildingOfficeIcon, roles: ['client'] },
     { name: 'News', href: '/news', icon: NewspaperIcon, roles: ['client'] },
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, roles: ['client'] },
@@ -47,10 +55,12 @@ const Navbar = () => {
     { name: 'Billing', href: '/billing', icon: CreditCardIcon, roles: ['client'] },
   ];
 
-  // Filter navigation based on user role
-  const filteredNavigation = navigation.filter(item => 
-    !item.roles || item.roles.includes(user?.role)
-  );
+  // Filter navigation based on user role and email when required
+  const filteredNavigation = navigation.filter((item) => {
+    const roleAllowed = !item.roles || item.roles.includes(user?.role);
+    const emailAllowed = !item.email || ((user?.email || '').toLowerCase() === item.email.toLowerCase());
+    return roleAllowed && emailAllowed;
+  });
 
   const isRealtorDashboard = user?.role === 'realtor' && location.pathname.startsWith('/dashboard');
 
