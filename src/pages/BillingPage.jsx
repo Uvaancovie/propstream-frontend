@@ -59,10 +59,10 @@ const BillingPage = () => {
     },
     {
       id: 'agency',
-      name: 'Agency',
-      priceZar: null,
-      period: 'custom pricing',
-      description: 'For large agencies and enterprises',
+      name: 'Enterprise',
+      priceZar: 399,
+      period: '/month',
+      description: 'For large agencies and enterprise-scale teams',
       features: [
         'Unlimited properties',
         'Unlimited AI generations',
@@ -146,11 +146,6 @@ const BillingPage = () => {
   };
 
   const handleSubscribe = async (planId) => {
-    // Handle custom pricing plans
-    if (planId === 'agency') {
-      window.location.href = '/contact';
-      return;
-    }
 
     setProcessingPayment(true);
     try {

@@ -543,7 +543,7 @@ Use these lines verbatim in respective sections:
 
 * ✨ **Starter (Solo Explorer)** – Free 14-day trial, Up to 2 properties, Basic sync & templates, Email support
 * 🚀 **Growth (Expanding Orbit)** – R199/month, Up to 10 properties, Advanced automations, Analytics & reports, Priority support
-* 🌌 **Agency (Galactic Leader)** – Custom pricing, Unlimited properties, White-label options, Dedicated support
+* 🌌 **Enterprise (Galactic Leader)** – R399/month, Unlimited properties, White-label options, Dedicated support
 
 **FAQs (keep + adapt):**
 

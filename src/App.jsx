@@ -9,7 +9,6 @@ import Navbar from './components/Navbar';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // Pages
-import PropnovaLanding from './pages/PropnovaLanding';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -113,64 +112,46 @@ function App() {
                   </PublicRoute>
                 } 
               />
-              <Route 
-                path="/login" 
+              <Route
+                path="/login"
                 element={
                   <PublicRoute>
                     <LoginPage />
                   </PublicRoute>
-                } 
+                }
               />
-              <Route 
-                path="/register" 
+              <Route
+                path="/register"
                 element={
                   <PublicRoute>
                     <RegisterPage />
                   </PublicRoute>
-                } 
-              />
-              <Route 
-                path="/old-landing" 
-                element={
-                  <PublicRoute>
-                    <PropnovaLanding />
-                  </PublicRoute>
-                } 
-              />
-              <Route 
-                path="/profile" 
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <UserProfile />
-                    </AppLayout>
-                  </ProtectedRoute>
                 }
               />
-              <Route 
-                path="/demo" 
-                element={<DemoPage />} 
+              <Route
+                path="/demo"
+                element={<DemoPage />}
               />
 
               {/* Public property routes - available to all */}
               <Route path="/browse" element={<PublicPropertiesPage />} />
               <Route path="/property/:slug" element={<PublicPropertyDetailsPage />} />
-              <Route 
-                path="/browse" 
+              <Route
+                path="/browse-auth"
                 element={
                   <AppLayout>
                     {/* Allow both authenticated and unauthenticated users to access this page */}
                     <BrowsePropertiesPage />
                   </AppLayout>
-                } 
+                }
               />
-              <Route 
-                path="/property/:id" 
+              <Route
+                path="/property/:id"
                 element={
                   <AppLayout>
                     <PropertyDetailsPage />
                   </AppLayout>
-                } 
+                }
               />
 
               {/* Protected routes */}

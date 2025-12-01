@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { 
   Rocket, 
@@ -202,11 +202,24 @@ const LandingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const inputRef = useRef(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Simple input change handler with useCallback to prevent re-renders
   const handleEmailChange = useCallback((e) => {
     setEmail(e.target.value);
   }, []);
+
+  // Scroll to anchor for hashes like /#pricing, /#features
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      const id = hash.replace('#', '');
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
+    }
+  }, [location]);
 
   // Waitlist form handler with useCallback to prevent re-renders
   const handleSubmit = useCallback(async (e) => {
@@ -303,10 +316,10 @@ const LandingPage = () => {
             </Link>
             
             <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
-              <Link to="/features" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">Features</Link>
-              <Link to="/pricing" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">Pricing</Link>
-              <Link to="/about" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">About</Link>
-              <Link to="/contact" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">Contact</Link>
+              <Link to="/#features" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">Features</Link>
+              <Link to="/#pricing" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">Pricing</Link>
+              <Link to="/#about" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">About</Link>
+              <Link to="/#contact" className="text-slate-400 hover:text-white transition-colors text-sm lg:text-base">Contact</Link>
             </nav>
             
             <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
@@ -338,10 +351,10 @@ const LandingPage = () => {
           {isMenuOpen && (
             <div className="md:hidden border-t border-slate-800 py-4">
               <nav className="flex flex-col space-y-3">
-                <Link to="/features" className="text-slate-400 hover:text-white transition-colors py-2">Features</Link>
-                <Link to="/pricing" className="text-slate-400 hover:text-white transition-colors py-2">Pricing</Link>
-                <Link to="/about" className="text-slate-400 hover:text-white transition-colors py-2">About</Link>
-                <Link to="/contact" className="text-slate-400 hover:text-white transition-colors py-2">Contact</Link>
+                <Link to="/#features" className="text-slate-400 hover:text-white transition-colors py-2">Features</Link>
+                <Link to="/#pricing" className="text-slate-400 hover:text-white transition-colors py-2">Pricing</Link>
+                <Link to="/#about" className="text-slate-400 hover:text-white transition-colors py-2">About</Link>
+                <Link to="/#contact" className="text-slate-400 hover:text-white transition-colors py-2">Contact</Link>
                 <div className="flex flex-col space-y-2 pt-3 border-t border-slate-800">
                   <Link to="/login">
                     <Button 
@@ -483,7 +496,7 @@ const LandingPage = () => {
     ];
 
     return (
-      <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-[#0A0A0A]">
+      <section id="features" className="py-12 sm:py-16 md:py-20 lg:py-24 bg-[#0A0A0A]">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <Badge className="bg-violet-700/70 text-white border border-violet-700/50 mb-4">Features at a glance</Badge>
@@ -608,9 +621,9 @@ const LandingPage = () => {
         ]
       },
       {
-        name: "Agency",
-        price: "Custom",
-        period: "pricing",
+        name: "Enterprise",
+        price: "R399",
+        period: "per month",
         badge: "🌌 Enterprise",
         features: [
           "Unlimited properties",
@@ -706,7 +719,7 @@ const LandingPage = () => {
       },
       {
         question: "How many properties can I list?",
-        answer: "Free plan: up to 2 properties. Growth plan: up to 10 properties. Agency plan: unlimited properties. All plans include full property management features."
+        answer: "Free plan: up to 2 properties. Growth plan: up to 10 properties. Enterprise plan: unlimited properties. All plans include full property management features."
       },
       {
         question: "Is Payfast integration included?",
@@ -727,7 +740,7 @@ const LandingPage = () => {
     ];
 
     return (
-      <section className="py-14 md:py-20 bg-black">
+      <section id="about" className="py-14 md:py-20 bg-black">
         <div className="container max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
@@ -809,6 +822,20 @@ const LandingPage = () => {
     );
   };
 
+  // Contact section (anchor)
+  const ContactSection = () => (
+    <section id="contact" className="py-12 sm:py-16 md:py-20 lg:py-24 bg-[#0B0B0E] border-t border-slate-800">
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h3 className="text-2xl font-semibold text-white mb-3">Contact Sales & Support</h3>
+        <p className="text-slate-300 max-w-2xl mx-auto mb-6">Have questions? Get in touch and our team will assist you with pricing, migrations, and enterprise setup.</p>
+        <div className="flex items-center justify-center gap-4">
+          <a href="mailto:support@nova-prop.com" className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-md">Email Support</a>
+          <Link to="/contact" className="bg-white/5 hover:bg-white/10 text-white px-6 py-3 rounded-md">Contact Form</Link>
+        </div>
+      </div>
+    </section>
+  );
+
   return (
     <div className="min-h-screen w-full bg-[#0A0A0A] text-white starfield overflow-x-hidden" style={{ backgroundColor: '#0A0A0A' }}>
       <Header />
@@ -826,6 +853,7 @@ const LandingPage = () => {
       <TimeSavings />
       <Pricing />
       <FAQ />
+      <ContactSection />
       <Footer />
     </div>
   );
