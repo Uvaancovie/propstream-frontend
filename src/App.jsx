@@ -236,6 +236,16 @@ function App() {
                 } 
               />
               <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute allowedRoles={['client','realtor','owner','admin']}>
+                    <AppLayout>
+                      <UserProfile />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
                 path="/property/:propertyId/book" 
                 element={
                   <ProtectedRoute>

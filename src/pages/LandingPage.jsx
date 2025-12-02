@@ -70,6 +70,13 @@ const Hero = ({ email, isSubmitted, isSubmitting, handleEmailChange, handleSubmi
 
             {/* Action Buttons */}
             <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-4 lg:justify-start">
+              <Link to="/browse" className="sm:w-auto">
+                <Button 
+                  className="bg-slate-800 hover:bg-slate-700 w-full sm:w-auto whitespace-nowrap h-12 px-8 text-lg font-semibold border border-slate-700 text-slate-200"
+                >
+                  Browse Properties
+                </Button>
+              </Link>
               <Link to="/register" className="sm:w-auto">
                 <Button 
                   className="bg-violet-600 hover:bg-violet-700 w-full sm:w-auto whitespace-nowrap h-12 px-8 text-lg font-semibold"

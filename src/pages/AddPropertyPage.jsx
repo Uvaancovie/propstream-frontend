@@ -30,7 +30,7 @@ const AddPropertyPage = () => {
     bathrooms: '',
     max_guests: '',
     amenities: '',
-    images: '',  // Changed from image_url to match PropertiesPage
+    imageInputs: ['', '', ''],
     property_type: 'apartment',
     available_from: '',
     available_to: '',
@@ -52,6 +52,17 @@ const AddPropertyPage = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleImageInputChange = (index, value) => {
+    setFormData(prev => {
+      const nextImages = [...prev.imageInputs];
+      nextImages[index] = value;
+      return {
+        ...prev,
+        imageInputs: nextImages
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -93,7 +104,7 @@ const AddPropertyPage = () => {
         bathrooms: parseInt(formData.bathrooms) || 1,
         max_guests: parseInt(formData.max_guests) || 2,
         amenities: formData.amenities ? formData.amenities.split(',').map(a => a.trim()).filter(a => a) : [],
-        images: formData.images ? formData.images.split(',').map(i => i.trim()).filter(i => i) : [],
+        images: formData.imageInputs ? formData.imageInputs.map(i => i.trim()).filter(i => i) : [],
         is_available: true
       };
 
@@ -391,18 +402,35 @@ const AddPropertyPage = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Property Image URL
+                Property Images (up to 3)
               </label>
-              <input
-                type="url"
-                name="image_url"
-                value={formData.image_url}
-                onChange={handleInputChange}
-                placeholder="https://example.com/property-image.jpg"
-                className="input w-full"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Add a URL to a beautiful photo of your property
+              <div className="space-y-4">
+                {formData.imageInputs.map((url, index) => (
+                  <div key={index}>
+                    <label className="text-xs uppercase tracking-wide text-gray-500 mb-1 block">
+                      Image {index + 1}
+                    </label>
+                    <input
+                      type="url"
+                      value={url}
+                      onChange={(e) => handleImageInputChange(index, e.target.value)}
+                      placeholder="https://example.com/property-image.jpg"
+                      className="input w-full"
+                    />
+                    {url && (
+                      <div className="mt-2 h-32 rounded-lg overflow-hidden border border-gray-200">
+                        <img
+                          src={url}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                These photos will be shown on the public browse page so guests can preview your space.
               </p>
             </div>
           </div>

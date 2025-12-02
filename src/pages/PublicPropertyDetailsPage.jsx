@@ -5,6 +5,16 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useAuth } from '../contexts/AuthContext';
 import SubscribeButton from '../components/SubscribeButton';
+import {
+  BedDouble,
+  Bath,
+  Users,
+  MapPin,
+  Share2,
+  ShieldCheck,
+  CalendarCheck,
+  Sparkles
+} from 'lucide-react';
 
 // API base helper and image normalizer (shared fallback for relative URLs)
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
@@ -27,17 +37,6 @@ const PublicPropertyDetailsPage = () => {
   useEffect(() => {
     loadProperty();
   }, [slug]);
-
-  // API base (fall back to localhost backend)
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
-
-  const normalizeImageUrl = (url) => {
-    if (!url) return '/novaprop-logo.jpeg';
-    if (/^(https?:)?\/\//i.test(url) || url.startsWith('data:')) return url;
-    const apiHost = API_BASE.replace(/\/+api\/?$/i, '').replace(/\/+$/,'');
-    if (url.startsWith('/')) return `${apiHost}${url}`;
-    return `${apiHost}/${url}`;
-  };
 
   const loadProperty = async () => {
     setLoading(true);
@@ -87,15 +86,41 @@ const PublicPropertyDetailsPage = () => {
     }).format(price);
   };
 
-  const shareProperty = (method) => {
+  const shareProperty = async (method) => {
     const url = window.location.href;
     const priceVal = property?.price_per_night ?? property?.price ?? 0;
     const title = `${property.title} - ${formatPrice(priceVal)}`;
-    
+
     switch (method) {
       case 'copy':
-        navigator.clipboard.writeText(url);
-        alert('Link copied to clipboard!');
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          const input = document.createElement('input');
+          input.value = url;
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          document.body.removeChild(input);
+        }
+        break;
+      case 'share':
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title,
+              text: property.description?.slice(0, 140) || 'Check out this stay on Nova Prop',
+              url
+            });
+          } catch (err) {
+            console.warn('Web Share failed', err);
+          }
+          break;
+        }
+        // fallback to copy if Web Share not supported
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(url);
+        }
         break;
       case 'facebook':
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
@@ -110,6 +135,7 @@ const PublicPropertyDetailsPage = () => {
         window.location.href = `mailto:?subject=${encodeURIComponent(title)}&body=Check out this property: ${encodeURIComponent(url)}`;
         break;
     }
+
     setShareMenuOpen(false);
   };
 
@@ -145,230 +171,271 @@ const PublicPropertyDetailsPage = () => {
     );
   }
 
+  const heroImage =
+    (property.images && property.images.length > 0 && normalizeImageUrl(property.images[0])) ||
+    normalizeImageUrl(property.heroImage || property.coverImage);
+  const locationLabel = [property.city, property.province || property.state, property.country]
+    .filter(Boolean)
+    .join(', ');
+  const guestCount = property.max_guests || property.maxGuests || property.guests || 0;
+  const nightlyRate = formatPrice(property.price_per_night ?? property.price);
+  const highlights = [
+    property.bedrooms ? `${property.bedrooms}+ serene bedrooms` : null,
+    property.bathrooms ? `${property.bathrooms}+ spa bathrooms` : null,
+    guestCount ? `Hosts up to ${guestCount} guests` : null,
+    property.amenities?.includes('Sea View') ? 'Panoramic sea views' : null,
+    property.amenities?.includes('Pool') ? 'Private pool experience' : null
+  ].filter(Boolean);
+
   return (
-    <div className="min-h-screen bg-[#0B0B0E] text-slate-200">
-      {/* Navigation */}
-      <nav className="bg-transparent border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/browse" className="flex items-center text-slate-300 hover:text-slate-100">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Properties
-            </Link>
-            <Link 
-              to="/login"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Realtor Login
-            </Link>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loadError && (
-          <div className="mb-6 bg-yellow-900/30 border border-yellow-700 text-yellow-200 p-4 rounded-lg">
-            <strong>Unable to load property:</strong> {loadError}
-            <div className="text-xs text-yellow-200/80 mt-1">Check that the backend API is running at the configured VITE_API_BASE_URL ({import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'})</div>
-          </div>
-        )}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Image Gallery */}
-          <div className="space-y-4">
-            {/* Main Image */}
-            <div className="relative h-96 bg-slate-800 rounded-lg overflow-hidden">
-              {property.images && property.images.length > 0 ? (
-                <img
-                  src={normalizeImageUrl(property.images[activeImageIndex])}
-                  alt={property.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-slate-800">
-                  <svg className="w-16 h-16 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m6 0v-7h4v7m-4-3h2m-2 0V9h2v3" />
-                  </svg>
-                </div>
-              )}
-              
-              {/* Image Navigation */}
-              {property.images && property.images.length > 1 && (
-                <>
-                  <button
-                    onClick={() => setActiveImageIndex(Math.max(0, activeImageIndex - 1))}
-                    disabled={activeImageIndex === 0}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 p-2 bg-slate-800 bg-opacity-80 rounded-full hover:bg-opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg className="w-5 h-5 text-slate-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => setActiveImageIndex(Math.min(property.images.length - 1, activeImageIndex + 1))}
-                    disabled={activeImageIndex === property.images.length - 1}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-slate-800 bg-opacity-80 rounded-full hover:bg-opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg className="w-5 h-5 text-slate-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Thumbnail Images */}
-            {property.images && property.images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {property.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setActiveImageIndex(index)}
-                    className={`relative h-24 bg-slate-800 rounded-lg overflow-hidden ${
-                      index === activeImageIndex ? 'ring-2 ring-violet-500' : ''
-                    }`}
-                  >
-                    <img
-                      src={normalizeImageUrl(image)}
-                      alt={`${property.title} - ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Property Details */}
-          <div className="space-y-6">
-            {/* Header */}
+    <div className="min-h-screen bg-[#05070F] text-slate-100">
+      <header className="relative h-[420px] w-full overflow-hidden">
+        <img
+          src={heroImage}
+          alt={property.title}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#05070F] via-[#05070F]/80 to-transparent" />
+        <div className="absolute inset-x-0 bottom-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between gap-6">
             <div>
-              <div className="flex items-start justify-between mb-2">
-                <h1 className="text-3xl font-bold text-gray-900">{property.title}</h1>
+              <Link to="/browse" className="inline-flex items-center text-white/80 text-sm mb-4">
+                ← Back to all stays
+              </Link>
+              <p className="uppercase tracking-[0.3em] text-xs text-white/60 mb-3">Exclusive Stay</p>
+              <h1 className="text-3xl md:text-4xl font-semibold text-white max-w-3xl">
+                {property.title}
+              </h1>
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-white/80">
+                <span className="inline-flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  {locationLabel || property.address}
+                </span>
+                {property.propertyType && (
+                  <Badge className="bg-white/15 text-white border-white/20">
+                    {property.propertyType}
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <div className="text-right space-y-2">
+              <p className="text-xs text-white/60 tracking-[0.2em]">FROM</p>
+              <p className="text-3xl font-semibold text-white">{nightlyRate}</p>
+              <p className="text-xs text-white/60">per night • flexible stays</p>
+              <div className="flex md:justify-end gap-2">
                 <div className="relative">
                   <button
-                    onClick={() => setShareMenuOpen(!shareMenuOpen)}
-                    className="p-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg"
+                    onClick={() => setShareMenuOpen((prev) => !prev)}
+                    className="inline-flex items-center gap-2 text-white/80 text-sm border border-white/30 rounded-full px-4 py-2 hover:bg-white/10 transition"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                    </svg>
+                    <Share2 className="w-4 h-4" />
+                    Share
                   </button>
-
-                  {/* Share Menu */}
                   {shareMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                      <div className="p-2">
-                        <button onClick={() => shareProperty('copy')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">
-                          Copy Link
+                    <div className="absolute right-0 mt-2 w-56 bg-[#0f111b] border border-white/10 rounded-2xl shadow-xl z-20">
+                      {[
+                        { key: 'share', label: 'Share via device' },
+                        { key: 'copy', label: 'Copy link' },
+                        { key: 'facebook', label: 'Facebook' },
+                        { key: 'twitter', label: 'Twitter' },
+                        { key: 'linkedin', label: 'LinkedIn' },
+                        { key: 'email', label: 'Email' }
+                      ].map(({ key, label }) => (
+                        <button
+                          key={key}
+                          onClick={() => shareProperty(key)}
+                          className="w-full text-left px-4 py-2 text-sm text-white/80 hover:bg-white/10 rounded-2xl"
+                        >
+                          {label}
                         </button>
-                        <button onClick={() => shareProperty('facebook')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">
-                          Share on Facebook
-                        </button>
-                        <button onClick={() => shareProperty('twitter')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">
-                          Share on Twitter
-                        </button>
-                        <button onClick={() => shareProperty('linkedin')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">
-                          Share on LinkedIn
-                        </button>
-                        <button onClick={() => shareProperty('email')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">
-                          Share via Email
-                        </button>
-                      </div>
+                      ))}
                     </div>
                   )}
                 </div>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 text-sm text-[#05070F] bg-white rounded-full px-4 py-2 font-semibold"
+                >
+                  Host with us
+                </Link>
               </div>
+            </div>
+          </div>
+        </div>
+      </header>
 
-              <div className="flex items-center space-x-4 text-slate-400 mb-4">
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {property.address}, {property.city}, {property.state}
-                </div>
-                <Badge variant="secondary">{property.propertyType}</Badge>
-              </div>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {loadError && (
+          <div className="mb-6 bg-yellow-900/20 border border-yellow-700 text-yellow-100/90 p-4 rounded-2xl">
+            <strong>Unable to load property:</strong> {loadError}
+          </div>
+        )}
 
-              <div className="text-3xl font-bold text-violet-400 mb-4">
-                {formatPrice(property.price_per_night ?? property.price)}
+        <section className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-10">
+          <div className="space-y-8">
+            <div className="rounded-3xl overflow-hidden">
+              <div className="relative h-[420px] rounded-3xl overflow-hidden">
+                {property.images && property.images.length > 0 ? (
+                  <img
+                    src={normalizeImageUrl(property.images[activeImageIndex])}
+                    alt={property.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-slate-900">
+                    <Sparkles className="w-10 h-10 text-slate-500" />
+                  </div>
+                )}
+                {property.images && property.images.length > 1 && (
+                  <div className="absolute inset-0 flex items-center justify-between px-4">
+                    <button
+                      onClick={() => setActiveImageIndex(Math.max(0, activeImageIndex - 1))}
+                      className="bg-black/40 w-10 h-10 rounded-full text-white flex items-center justify-center hover:bg-black/60 transition"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      onClick={() => setActiveImageIndex(Math.min(property.images.length - 1, activeImageIndex + 1))}
+                      className="bg-black/40 w-10 h-10 rounded-full text-white flex items-center justify-center hover:bg-black/60 transition"
+                    >
+                      ›
+                    </button>
+                  </div>
+                )}
+                {property.images && property.images.length > 1 && (
+                  <div className="absolute bottom-4 inset-x-0 flex justify-center gap-2">
+                    {property.images.slice(0, 6).map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveImageIndex(idx)}
+                        className={`h-14 w-16 rounded-xl overflow-hidden border ${idx === activeImageIndex ? 'border-white' : 'border-white/30'} transition`}
+                      >
+                        <img
+                          src={normalizeImageUrl(img)}
+                          alt={`${property.title} ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Quick Stats */}
-            <Card className="p-4 bg-slate-800 border-slate-700 text-slate-200">
-              <div className="grid grid-cols-3 gap-4 text-center">
-                {property.bedrooms && (
-                  <div>
-                    <div className="text-2xl font-bold text-slate-100">{property.bedrooms}</div>
-                    <div className="text-sm text-slate-400">Bedrooms</div>
-                  </div>
-                )}
-                {property.bathrooms && (
-                  <div>
-                    <div className="text-2xl font-bold text-slate-100">{property.bathrooms}</div>
-                    <div className="text-sm text-slate-400">Bathrooms</div>
-                  </div>
-                )}
-                {property.squareFootage && (
-                  <div>
-                    <div className="text-2xl font-bold text-slate-100">{property.squareFootage.toLocaleString()}</div>
-                    <div className="text-sm text-slate-400">Sq Ft</div>
-                  </div>
-                )}
-              </div>
-            </Card>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {property.bedrooms && (
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <BedDouble className="w-5 h-5 text-white/70" />
+                  <p className="text-2xl font-semibold mt-2">{property.bedrooms}</p>
+                  <p className="text-sm text-white/70">Bedrooms</p>
+                </div>
+              )}
+              {property.bathrooms && (
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <Bath className="w-5 h-5 text-white/70" />
+                  <p className="text-2xl font-semibold mt-2">{property.bathrooms}</p>
+                  <p className="text-sm text-white/70">Bathrooms</p>
+                </div>
+              )}
+              {guestCount ? (
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <Users className="w-5 h-5 text-white/70" />
+                  <p className="text-2xl font-semibold mt-2">{guestCount}</p>
+                  <p className="text-sm text-white/70">Guests</p>
+                </div>
+              ) : null}
+            </div>
 
-            {/* Description */}
-            <Card className="p-6 bg-slate-800 border-slate-700 text-slate-200">
-              <h2 className="text-xl font-semibold text-slate-100 mb-4">Description</h2>
-              <p className="text-slate-300 leading-relaxed">
+            <Card className="bg-slate-900/40 border-slate-800 rounded-3xl p-8 text-white">
+              <p className="uppercase tracking-[0.4em] text-xs text-white/50 mb-4">About this stay</p>
+              <p className="text-lg leading-relaxed text-white/80 whitespace-pre-line">
                 {property.description || 'No description available.'}
               </p>
             </Card>
 
-            {/* Amenities */}
-            {property.amenities && property.amenities.length > 0 && (
-              <Card className="p-6 bg-slate-800 border-slate-700 text-slate-200">
-                <h2 className="text-xl font-semibold text-slate-100 mb-4">Amenities</h2>
-                <div className="grid grid-cols-2 gap-2">
-                  {property.amenities.map((amenity, index) => (
-                    <div key={index} className="flex items-center text-slate-300">
-                      <svg className="w-4 h-4 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      {amenity}
+            {highlights.length > 0 && (
+              <Card className="bg-slate-900/50 border-slate-800 rounded-3xl p-8">
+                <h2 className="text-xl font-semibold text-white mb-4">Why guests love it</h2>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {highlights.map((highlight, index) => (
+                    <div key={index} className="flex items-start gap-3 text-white/80">
+                      <Sparkles className="w-4 h-4 text-violet-400 mt-1" />
+                      <span>{highlight}</span>
                     </div>
                   ))}
                 </div>
               </Card>
             )}
 
-            {/* Contact CTA */}
-            <Card className="p-6 bg-slate-800 border-slate-700 text-slate-200">
-              <h2 className="text-xl font-semibold text-slate-100 mb-4">About the Realtor</h2>
-              <div className="text-slate-300 mb-4">
-                  Listed by:
+            {property.amenities && property.amenities.length > 0 && (
+              <Card className="bg-slate-900/50 border-slate-800 rounded-3xl p-8">
+                <h2 className="text-xl font-semibold text-white mb-4">Amenities</h2>
+                <div className="flex flex-wrap gap-3">
+                  {property.amenities.map((amenity, idx) => (
+                    <span
+                      key={idx}
+                      className="text-sm px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/80"
+                    >
+                      {amenity}
+                    </span>
+                  ))}
                 </div>
-              <div className="flex items-center gap-4 mb-4">
-                <img src={normalizeImageUrl(property.realtor_profileImage || '/novaprop-logo.jpeg')} alt={(property.realtor_name || 'Realtor')} className="w-14 h-14 rounded-full object-cover border border-slate-700" />
+              </Card>
+            )}
+          </div>
+
+          <aside className="space-y-6">
+            <Card className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 sticky top-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium text-slate-100">{property.realtor_name || 'Realtor'}</div>
-                  <div className="text-sm text-slate-400">{property.realtor_email || ''}</div>
-                  <div className="text-sm text-slate-400">{property.realtor_phone || ''}</div>
+                  <p className="text-sm text-slate-500">From</p>
+                  <p className="text-3xl font-semibold">{nightlyRate}</p>
+                  <p className="text-xs text-slate-400">Incl. concierge support</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-slate-500">Hosted by</p>
+                  <p className="font-medium">{property.realtor_name || 'Realtor'}</p>
+                  <p className="text-xs text-slate-400">{property.realtor_email}</p>
                 </div>
               </div>
 
-              <p className="text-slate-300 mb-4">
-                Contacting and booking requires an account. Sign up or log in to message the realtor and request viewings.
-              </p>
-              <AuthCTA property={property} />
+              <div className="mt-6 space-y-4">
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <CalendarCheck className="w-4 h-4" />
+                  Flexible check-in. Instant messaging after booking.
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <ShieldCheck className="w-4 h-4" />
+                  Protected platform payments & verified hosts.
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <AuthCTA property={property} />
+              </div>
             </Card>
-          </div>
-        </div>
-      </div>
+
+            <Card className="bg-slate-900/40 border-slate-800 rounded-3xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Hosted Experience</h3>
+              <div className="flex items-center gap-4 mb-4">
+                <img
+                  src={normalizeImageUrl(property.realtor_profileImage || '/novaprop-logo.jpeg')}
+                  alt={(property.realtor_name || 'Realtor')}
+                  className="w-14 h-14 rounded-full object-cover border border-white/10"
+                />
+                <div>
+                  <p className="font-medium text-white">{property.realtor_name || 'Realtor'}</p>
+                  <p className="text-sm text-white/70">{property.realtor_phone || ''}</p>
+                </div>
+              </div>
+              <p className="text-sm text-white/70">
+                Once you send a booking request, your dedicated host will confirm availability,
+                arrange bespoke add-ons, and guide you from check-in to departure.
+              </p>
+            </Card>
+          </aside>
+        </section>
+      </main>
     </div>
   );
 };
