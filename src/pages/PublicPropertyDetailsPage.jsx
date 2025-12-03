@@ -382,6 +382,27 @@ const PublicPropertyDetailsPage = () => {
                 </div>
               </Card>
             )}
+
+            {/* Rental Agreement */}
+            {property.rental_agreement && (
+              <Card className="bg-slate-900/50 border-slate-800 rounded-3xl p-8">
+                <h2 className="text-xl font-semibold text-white mb-4">Rental Agreement</h2>
+                <p className="text-white/70 mb-4">
+                  Review the rental agreement before booking. This document outlines the terms and conditions for your stay.
+                </p>
+                <a
+                  href={normalizeImageUrl(property.rental_agreement)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-purple-500/25"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  View Rental Agreement (PDF)
+                </a>
+              </Card>
+            )}
           </div>
 
           <aside className="space-y-6">

@@ -15,6 +15,7 @@ import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import PropertiesPage from './pages/PropertiesPage';
 import AddPropertyPage from './pages/AddPropertyPage';
+import EditPropertyPage from './pages/EditPropertyPage';
 import BookingsPage from './pages/BookingsPage';
 import BookingPage from './pages/BookingPage';
 import CalendarPage from './pages/CalendarPage';
@@ -181,6 +182,16 @@ function App() {
                   <ProtectedRoute allowedRoles={['realtor']}>
                     <AppLayout>
                       <AddPropertyPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/properties/edit/:id" 
+                element={
+                  <ProtectedRoute allowedRoles={['realtor']}>
+                    <AppLayout>
+                      <EditPropertyPage />
                     </AppLayout>
                   </ProtectedRoute>
                 } 

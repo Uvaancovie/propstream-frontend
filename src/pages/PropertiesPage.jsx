@@ -125,23 +125,7 @@ const PropertiesPage = () => {
   };
 
   const handleEdit = (property) => {
-    setFormData({
-      name: property.name || '',
-      address: property.address || '',
-      city: property.city || '',
-      province: property.province || '',
-      description: property.description || '',
-      price_per_night: (property.price_per_night || property.pricePerNight || '').toString(),
-      max_guests: (property.max_guests || property.maxGuests || '').toString(),
-      bedrooms: (property.bedrooms || '').toString(),
-      bathrooms: (property.bathrooms || '').toString(),
-      amenities: Array.isArray(property.amenities) ? property.amenities.join(', ') : (property.amenities || ''),
-      houseRules: property.houseRules || '',
-      images: Array.isArray(property.images) ? property.images.join(', ') : (property.images || '')
-    });
-
-    setSelectedProperty(property);
-    setShowModal(true);
+    navigate(`/properties/edit/${property._id}`);
   };
 
   const handleDelete = async (propertyId) => {

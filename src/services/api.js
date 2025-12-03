@@ -335,6 +335,10 @@ export const aiAPI = {
   getHistory: async () => {
     const response = await api.get('/ai-generator/history');
     return response.data;
+  },
+  getUsage: async () => {
+    const response = await api.get('/me/ai-usage');
+    return response.data;
   }
 };
 

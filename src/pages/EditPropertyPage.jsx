@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
-import { addPropertyToStorage } from '../utils/seedData';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
-import { propertiesAPI, aiAPI } from '../services/api';
+import { propertiesAPI, aiAPI, api } from '../services/api';
 import { 
   PhotoIcon,
   MapPinIcon,
@@ -20,10 +19,12 @@ import {
   ArrowUpCircleIcon
 } from '@heroicons/react/24/outline';
 
-const AddPropertyPage = () => {
+const EditPropertyPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { id } = useParams();
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiUsage, setAiUsage] = useState({ used: 0, limit: 8, totalRemaining: 8 });
   const [pdfFile, setPdfFile] = useState(null);
@@ -57,6 +58,60 @@ const AddPropertyPage = () => {
     { value: 'studio', label: 'Studio' }
   ];
 
+  // Fetch property data on mount
+  useEffect(() => {
+    const fetchProperty = async () => {
+      try {
+        setFetching(true);
+        const response = await api.get(`/properties/${id}`);
+        const property = response.data.property;
+        
+        if (property) {
+          // Convert images array to imageInputs format
+          const images = Array.isArray(property.images) ? property.images : [];
+          const imageInputs = ['', '', ''];
+          images.slice(0, 3).forEach((img, idx) => {
+            imageInputs[idx] = img || '';
+          });
+
+          setFormData({
+            name: property.name || '',
+            description: property.description || '',
+            address: property.address || '',
+            city: property.city || '',
+            province: property.province || '',
+            price_per_night: (property.price_per_night || '').toString(),
+            bedrooms: (property.bedrooms || '').toString(),
+            bathrooms: (property.bathrooms || '').toString(),
+            max_guests: (property.max_guests || '').toString(),
+            amenities: Array.isArray(property.amenities) ? property.amenities.join(', ') : (property.amenities || ''),
+            imageInputs,
+            property_type: property.property_type || 'apartment',
+            available_from: property.available_from ? property.available_from.split('T')[0] : '',
+            available_to: property.available_to ? property.available_to.split('T')[0] : '',
+            houseRules: property.houseRules || '',
+            rental_agreement: property.rental_agreement || ''
+          });
+
+          // Set PDF preview if rental agreement exists
+          if (property.rental_agreement) {
+            setPdfPreview('Existing Rental Agreement');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching property:', error);
+        toast.error('Failed to load property');
+        navigate('/properties');
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    if (id) {
+      fetchProperty();
+    }
+  }, [id, navigate]);
+
   // Fetch AI usage on mount
   useEffect(() => {
     const fetchAiUsage = async () => {
@@ -74,13 +129,11 @@ const AddPropertyPage = () => {
 
   // AI Generate handler
   const handleAIGenerate = async () => {
-    // Check if limit reached
     if (aiUsage.totalRemaining <= 0) {
       toast.error('AI generation limit reached. Please upgrade your plan.');
       return;
     }
 
-    // Validate minimum required fields
     if (!formData.city || !formData.property_type) {
       toast.error('Please fill in at least City and Property Type to generate');
       return;
@@ -102,7 +155,6 @@ const AddPropertyPage = () => {
       const response = await aiAPI.generate(payload);
       
       if (response.data) {
-        // Auto-fill form fields
         setFormData(prev => ({
           ...prev,
           name: response.data.title || prev.name,
@@ -112,7 +164,6 @@ const AddPropertyPage = () => {
             : prev.amenities
         }));
 
-        // Update usage from response
         if (response.usage) {
           setAiUsage(prev => ({
             ...prev,
@@ -155,18 +206,15 @@ const AddPropertyPage = () => {
     });
   };
 
-  // Handle PDF file selection
   const handlePdfChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (file.type !== 'application/pdf') {
       toast.error('Please select a PDF file');
       return;
     }
 
-    // Validate file size (10MB max)
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       toast.error('PDF file must be less than 10MB');
@@ -177,7 +225,6 @@ const AddPropertyPage = () => {
     setPdfPreview(file.name);
   };
 
-  // Remove selected PDF
   const removePdf = () => {
     setPdfFile(null);
     setPdfPreview(null);
@@ -187,7 +234,6 @@ const AddPropertyPage = () => {
     }
   };
 
-  // Convert file to base64
   const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -201,20 +247,13 @@ const AddPropertyPage = () => {
     e.preventDefault();
     
     if (!user) {
-      toast.error('You must be logged in to add a property');
+      toast.error('You must be logged in to edit a property');
       navigate('/login');
       return;
     }
     
     if (user?.role !== 'realtor') {
-      toast.error('Only realtors can add properties');
-      return;
-    }
-
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      toast.error('Authentication token missing. Please log in again.');
-      navigate('/login');
+      toast.error('Only realtors can edit properties');
       return;
     }
 
@@ -226,7 +265,6 @@ const AddPropertyPage = () => {
     try {
       setLoading(true);
 
-      // Convert PDF file to base64 if selected
       let rentalAgreementData = formData.rental_agreement || '';
       if (pdfFile) {
         try {
@@ -239,7 +277,12 @@ const AddPropertyPage = () => {
       }
       
       const propertyData = {
-        ...formData,
+        name: formData.name,
+        description: formData.description,
+        address: formData.address,
+        city: formData.city,
+        province: formData.province,
+        property_type: formData.property_type,
         price_per_night: parseFloat(formData.price_per_night) || 0,
         bedrooms: parseInt(formData.bedrooms) || 1,
         bathrooms: parseInt(formData.bathrooms) || 1,
@@ -247,71 +290,41 @@ const AddPropertyPage = () => {
         amenities: formData.amenities ? formData.amenities.split(',').map(a => a.trim()).filter(a => a) : [],
         images: formData.imageInputs ? formData.imageInputs.map(i => i.trim()).filter(i => i) : [],
         rental_agreement: rentalAgreementData,
-        is_available: true
+        available_from: formData.available_from || null,
+        available_to: formData.available_to || null,
+        houseRules: formData.houseRules
       };
 
-      if (!propertyData.realtor_id && user.id) {
-        propertyData.realtor_id = user.id;
-      }
-      if (!propertyData.realtor_name && user.name) {
-        propertyData.realtor_name = user.name;
-      }
-      if (!propertyData.realtor_email && user.email) {
-        propertyData.realtor_email = user.email;
-      }
-      if (!propertyData.realtor_phone && user.phone) {
-        propertyData.realtor_phone = user.phone;
-      }
-
-      console.log('🏠 Sending property data:', propertyData);
+      console.log('🏠 Updating property data:', propertyData);
       
-      try {
-        const response = await propertiesAPI.create(propertyData);
-        console.log('✅ Property creation response:', response);
-        
-        if (response.success) {
-          toast.success('Property added successfully!');
-          navigate('/dashboard');
-          return;
-        } else {
-          throw new Error(response.message || 'Failed to add property');
-        }
-      } catch (apiError) {
-        console.warn('API request failed, error details:', apiError);
-        
-        if (apiError.response) {
-          console.warn('Server responded with:', apiError.response.status, apiError.response.data);
-          toast.error(apiError.response.data.error || apiError.response.data.message || 'Server error');
-        } else {
-          console.warn('API request failed, saving to localStorage:', apiError);
-          
-          const localPropertyData = {
-            ...propertyData,
-            id: Date.now(),
-            createdAt: new Date().toISOString()
-          };
-
-          addPropertyToStorage(localPropertyData);
-          toast.success('Property added successfully (saved locally)!');
-          navigate('/dashboard');
-        }
-      }
+      const response = await api.put(`/properties/${id}`, propertyData);
+      console.log('✅ Property update response:', response);
+      
+      toast.success('Property updated successfully!');
+      navigate('/properties');
     } catch (error) {
-      console.error('❌ Property creation error:', error);
-      toast.error(error.response?.data?.message || error.message || 'Failed to add property. Please try again.');
+      console.error('❌ Property update error:', error);
+      toast.error(error.response?.data?.message || error.message || 'Failed to update property');
     } finally {
       setLoading(false);
     }
   };
 
-  // Redirect if not a realtor
+  if (fetching) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   if (user?.role !== 'realtor') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-8">
         <div className="text-center">
           <BuildingOfficeIcon className="w-16 h-16 text-slate-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-white mb-2">Access Restricted</h2>
-          <p className="text-slate-400 mb-6">Only realtors can add properties.</p>
+          <p className="text-slate-400 mb-6">Only realtors can edit properties.</p>
           <button
             onClick={() => navigate('/browse')}
             className="btn-primary-gradient px-6 py-3 rounded-xl font-semibold"
@@ -342,13 +355,13 @@ const AddPropertyPage = () => {
             </div>
             <div>
               <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-purple-400 via-violet-400 to-purple-600 text-transparent bg-clip-text mb-2">
-                Add New Property
+                Edit Property
               </h1>
               <div className="h-1 w-32 bg-gradient-to-r from-purple-400 to-violet-600 rounded-full mx-auto" />
             </div>
           </div>
           <p className="text-slate-300 text-xl max-w-2xl mx-auto leading-relaxed">
-            Create a stunning property listing in minutes
+            Update your property listing details
           </p>
         </div>
 
@@ -693,7 +706,7 @@ const AddPropertyPage = () => {
                             {pdfPreview || 'Rental Agreement'}
                           </p>
                           <p className="text-slate-400 text-sm">
-                            {pdfFile ? `${(pdfFile.size / 1024 / 1024).toFixed(2)} MB` : 'External URL'}
+                            {pdfFile ? `${(pdfFile.size / 1024 / 1024).toFixed(2)} MB` : 'Existing document'}
                           </p>
                         </div>
                         <button
@@ -767,7 +780,6 @@ const AddPropertyPage = () => {
                     value={formData.available_from}
                     onChange={handleInputChange}
                     className="input-dark w-full"
-                    min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
 
@@ -781,7 +793,7 @@ const AddPropertyPage = () => {
                     value={formData.available_to}
                     onChange={handleInputChange}
                     className="input-dark w-full"
-                    min={formData.available_from || new Date().toISOString().split('T')[0]}
+                    min={formData.available_from || ''}
                   />
                 </div>
               </div>
@@ -796,7 +808,7 @@ const AddPropertyPage = () => {
           <div className="flex items-center justify-between gap-6 pt-6">
             <button
               type="button"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/properties')}
               className="flex-1 bg-slate-700/80 hover:bg-slate-600/80 backdrop-blur-sm px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all duration-200 border border-slate-600/50"
               disabled={loading}
             >
@@ -811,12 +823,12 @@ const AddPropertyPage = () => {
               {loading ? (
                 <>
                   <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Creating Property...</span>
+                  <span>Updating Property...</span>
                 </>
               ) : (
                 <>
                   <BuildingOfficeIcon className="w-6 h-6" />
-                  <span>Add Property</span>
+                  <span>Update Property</span>
                 </>
               )}
             </button>
@@ -827,4 +839,4 @@ const AddPropertyPage = () => {
   );
 };
 
-export default AddPropertyPage;
+export default EditPropertyPage;

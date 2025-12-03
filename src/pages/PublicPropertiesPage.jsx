@@ -254,6 +254,24 @@ const PublicPropertiesPage = () => {
 
                       <p className="text-slate-300 text-sm mt-3 line-clamp-2">{property.description}</p>
 
+                      {/* Rental Agreement Link */}
+                      {property.rental_agreement && (
+                        <div className="mt-3">
+                          <a 
+                            href={normalizeImageUrl(property.rental_agreement)} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm font-medium bg-purple-500/10 hover:bg-purple-500/20 px-3 py-1.5 rounded-lg transition-all duration-200"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            View Rental Agreement
+                          </a>
+                        </div>
+                      )}
+
                       <div className="mt-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <img src={normalizeImageUrl(property.realtor_profileImage || property.realtor?.profileImage || property.owner?.profileImage || '/novaprop-logo.jpeg')} alt={(property.realtor?.name || property.owner?.name || 'Realtor')} className="w-10 h-10 rounded-full object-cover border border-slate-700" />
