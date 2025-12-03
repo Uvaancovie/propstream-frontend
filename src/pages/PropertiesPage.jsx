@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import {
@@ -13,6 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const PropertiesPage = () => {
+  const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -165,7 +167,7 @@ const PropertiesPage = () => {
           <button onClick={fetchProperties} className="btn bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg p-2">
             <ArrowPathIcon className="w-5 h-5" />
           </button>
-          <button onClick={() => { resetForm(); setSelectedProperty(null); setShowModal(true); }} className="btn bg-blue-600 text-white px-4 py-2 rounded-lg">Add Property</button>
+          <button onClick={() => navigate('/properties/add')} className="btn bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white px-6 py-2 rounded-lg font-semibold shadow-lg transition-all duration-200">Add Property</button>
         </div>
       </div>
 
