@@ -12,7 +12,8 @@ import {
   CurrencyDollarIcon,
   ArrowTrendingUpIcon,
   SparklesIcon,
-  ClockIcon
+  ClockIcon,
+  ArrowUpCircleIcon
 } from '@heroicons/react/24/outline';
 
 const Dashboard = () => {
@@ -37,12 +38,14 @@ const Dashboard = () => {
     // Only fetch dashboard data when user is loaded
     if (user) {
       fetchSubscription();
+      fetchPlanUsage();
       fetchDashboardData();
     }
   }, [user]);
 
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
   const [startingTrial, setStartingTrial] = useState(false);
+  const [planUsage, setPlanUsage] = useState(null);
 
   const fetchSubscription = async () => {
     try {
@@ -51,6 +54,16 @@ const Dashboard = () => {
     } catch (err) {
       console.warn('Could not fetch subscription info', err);
       setSubscriptionInfo(null);
+    }
+  };
+
+  const fetchPlanUsage = async () => {
+    try {
+      const res = await billingAPI.getUsage();
+      setPlanUsage(res);
+    } catch (err) {
+      console.warn('Could not fetch plan usage info', err);
+      setPlanUsage(null);
     }
   };
 
@@ -98,12 +111,12 @@ const Dashboard = () => {
                   View Calendar
                 </Button>
               </Link>
-              {/* Trial CTA */}
-              {!subscriptionInfo || subscriptionInfo.status === 'trialing' || subscriptionInfo.status === 'trial_expired' ? (
+              {/* Trial CTA - only show when no subscription or trial expired */}
+              {(!subscriptionInfo || subscriptionInfo.status === 'inactive' || subscriptionInfo.status === 'trial_expired') && (
                 <Button onClick={handleStartTrial} disabled={startingTrial} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                   {startingTrial ? 'Starting...' : 'Start 14-day Free Trial'}
                 </Button>
-              ) : null}
+              )}
             </>
           )}
           {user.role === 'client' && (
@@ -121,6 +134,147 @@ const Dashboard = () => {
             </>
           )}
         </div>
+      </div>
+    );
+  };
+
+  // Plan Usage section for realtors
+  const PlanUsageSection = () => {
+    if (!user || user.role !== 'realtor' || !planUsage) return null;
+
+    const { plan, usage } = planUsage;
+    const isUnlimited = (max) => max === -1;
+    
+    const getPercentage = (used, max) => {
+      if (isUnlimited(max)) return 0;
+      return Math.min(100, Math.round((used / max) * 100));
+    };
+
+    const isAtLimit = (used, max) => {
+      if (isUnlimited(max)) return false;
+      return used >= max;
+    };
+
+    const getProgressColor = (used, max) => {
+      if (isUnlimited(max)) return 'bg-violet-500';
+      const percentage = getPercentage(used, max);
+      if (percentage >= 100) return 'bg-red-500';
+      if (percentage >= 80) return 'bg-amber-500';
+      return 'bg-violet-500';
+    };
+
+    const usageItems = [
+      {
+        label: 'Properties Listed',
+        used: usage?.properties?.used || 0,
+        max: usage?.properties?.max || 2,
+        icon: BuildingOfficeIcon,
+        description: 'Property listings you can create'
+      },
+      {
+        label: 'AI Generations',
+        used: usage?.aiGenerations?.used || 0,
+        max: usage?.aiGenerations?.max || 8,
+        icon: SparklesIcon,
+        description: 'AI-powered listing descriptions'
+      }
+    ];
+
+    return (
+      <div className="bg-[#0B0B0E] p-6 rounded-lg shadow-lg border border-slate-800 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-white">Plan Usage</h2>
+            <p className="text-sm text-slate-400">
+              Current Plan: <span className="text-violet-400 font-medium">{plan?.label || 'Free'}</span>
+            </p>
+          </div>
+          {plan?.id !== 'agency' && (
+            <Link to="/billing">
+              <Button className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white flex items-center gap-2">
+                <ArrowUpCircleIcon className="w-4 h-4" />
+                Upgrade Plan
+              </Button>
+            </Link>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {usageItems.map((item) => {
+            const Icon = item.icon;
+            const percentage = getPercentage(item.used, item.max);
+            const atLimit = isAtLimit(item.used, item.max);
+            const unlimited = isUnlimited(item.max);
+            
+            return (
+              <div 
+                key={item.label} 
+                className={`p-4 rounded-lg border ${
+                  atLimit 
+                    ? 'bg-red-950/20 border-red-800/50' 
+                    : 'bg-slate-900/50 border-slate-800'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Icon className={`w-5 h-5 ${atLimit ? 'text-red-400' : 'text-violet-400'}`} />
+                    <span className="font-medium text-white">{item.label}</span>
+                  </div>
+                  <span className={`text-sm font-semibold ${
+                    atLimit ? 'text-red-400' : 'text-slate-300'
+                  }`}>
+                    {unlimited 
+                      ? `${item.used} / ∞`
+                      : `${item.used} / ${item.max}`
+                    }
+                  </span>
+                </div>
+                
+                {/* Progress bar */}
+                <div className="w-full bg-slate-800 rounded-full h-2 mb-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(item.used, item.max)}`}
+                    style={{ width: unlimited ? '10%' : `${percentage}%` }}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-slate-500">{item.description}</p>
+                  {atLimit && (
+                    <Link 
+                      to="/billing" 
+                      className="text-xs text-red-400 hover:text-red-300 font-medium flex items-center gap-1"
+                    >
+                      <ArrowUpCircleIcon className="w-3 h-3" />
+                      Upgrade
+                    </Link>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Upgrade prompt when any limit is reached */}
+        {(isAtLimit(usage?.properties?.used || 0, usage?.properties?.max || 2) || 
+          isAtLimit(usage?.aiGenerations?.used || 0, usage?.aiGenerations?.max || 8)) && (
+          <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-violet-900/30 to-purple-900/30 border border-violet-800/50">
+            <div className="flex items-start gap-3">
+              <ArrowUpCircleIcon className="w-6 h-6 text-violet-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-white mb-1">You've reached your limit</h3>
+                <p className="text-sm text-slate-400 mb-3">
+                  Upgrade to unlock more properties and AI generations. Growth plan includes 10 properties and 15 AI generations.
+                </p>
+                <Link to="/billing">
+                  <Button className="bg-violet-600 hover:bg-violet-700 text-white text-sm">
+                    View Plans & Upgrade
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -355,13 +509,6 @@ const Dashboard = () => {
       href: '/realtor/newsletter',
       icon: SparklesIcon,
       color: 'bg-violet-900/20 text-violet-400 hover:bg-violet-900/30 border border-violet-800/50'
-    },
-    {
-      title: 'AI Listing Generator',
-      description: 'Create compelling property descriptions with AI.',
-      href: '/ai-studio',
-      icon: SparklesIcon,
-      color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
     }
   ] : [
     {
@@ -484,6 +631,9 @@ const Dashboard = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Welcome Section */}
       <WelcomeSection />
+      
+      {/* Plan Usage Section (Realtors only) */}
+      <PlanUsageSection />
       
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
