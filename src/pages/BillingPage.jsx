@@ -87,10 +87,16 @@ const BillingPage = () => {
     // Check for upgrade intent
     const intent = searchParams.get('intent');
     const reason = searchParams.get('reason');
-    if (intent === 'upgrade' && reason === 'limit') {
-      toast.error('You\'ve reached your plan limit. Please upgrade to continue.', {
-        duration: 5000
-      });
+    if (intent === 'upgrade') {
+      if (reason === 'property_limit') {
+        toast.error('You\'ve reached your property limit. Please upgrade to continue adding properties.', {
+          duration: 6000
+        });
+      } else if (reason === 'limit') {
+        toast.error('You\'ve reached your plan limit. Please upgrade to continue.', {
+          duration: 5000
+        });
+      }
       // Scroll to plans section
       setTimeout(() => {
         document.getElementById('plans-section')?.scrollIntoView({ behavior: 'smooth' });

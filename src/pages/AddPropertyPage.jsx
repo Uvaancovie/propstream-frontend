@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { addPropertyToStorage } from '../utils/seedData';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
-import { propertiesAPI, aiAPI } from '../services/api';
+import { propertiesAPI, aiAPI, billingAPI } from '../services/api';
 import { 
   PhotoIcon,
   MapPinIcon,
@@ -17,7 +17,8 @@ import {
   CloudArrowUpIcon,
   XMarkIcon,
   SparklesIcon,
-  ArrowUpCircleIcon
+  ArrowUpCircleIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
 const AddPropertyPage = () => {
@@ -26,6 +27,7 @@ const AddPropertyPage = () => {
   const [loading, setLoading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiUsage, setAiUsage] = useState({ used: 0, limit: 8, totalRemaining: 8 });
+  const [planUsage, setPlanUsage] = useState(null);
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfPreview, setPdfPreview] = useState(null);
   const pdfInputRef = useRef(null);
@@ -57,18 +59,34 @@ const AddPropertyPage = () => {
     { value: 'studio', label: 'Studio' }
   ];
 
-  // Fetch AI usage on mount
+  // Fetch AI and plan usage on mount
   useEffect(() => {
-    const fetchAiUsage = async () => {
+    const fetchUsageData = async () => {
       try {
-        const usage = await aiAPI.getUsage();
-        setAiUsage(usage);
+        const [aiUsageData, planUsageData] = await Promise.all([
+          aiAPI.getUsage(),
+          billingAPI.getUsage()
+        ]);
+        setAiUsage(aiUsageData);
+        setPlanUsage(planUsageData);
+
+        // Check if at property limit
+        const propertiesUsed = planUsageData?.usage?.properties?.used || 0;
+        const propertiesMax = planUsageData?.usage?.properties?.max || 2;
+        
+        if (propertiesMax !== -1 && propertiesUsed >= propertiesMax) {
+          toast.error(
+            `You've reached your limit of ${propertiesMax} properties. Upgrade to add more.`,
+            { duration: 5000 }
+          );
+        }
       } catch (err) {
-        console.error('Failed to fetch AI usage:', err);
+        console.error('Failed to fetch usage:', err);
       }
     };
+
     if (user?.role === 'realtor') {
-      fetchAiUsage();
+      fetchUsageData();
     }
   }, [user]);
 
@@ -197,8 +215,24 @@ const AddPropertyPage = () => {
     });
   };
 
+  // Check if at property limit (helper function)
+  const isAtPropertyLimit = () => {
+    if (!planUsage?.usage?.properties) return false;
+    const { used, max } = planUsage.usage.properties;
+    return max !== -1 && used >= max;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check property limit BEFORE submission
+    if (isAtPropertyLimit()) {
+      toast.error('Property limit reached! Redirecting to upgrade page...');
+      setTimeout(() => {
+        navigate('/billing?intent=upgrade&reason=property_limit');
+      }, 1500);
+      return;
+    }
     
     if (!user) {
       toast.error('You must be logged in to add a property');
@@ -279,6 +313,15 @@ const AddPropertyPage = () => {
       } catch (apiError) {
         console.warn('API request failed, error details:', apiError);
         
+        // Handle limit reached error from backend
+        if (apiError.response?.status === 403 && apiError.response?.data?.code === 'PROPERTY_LIMIT_REACHED') {
+          toast.error(apiError.response.data.message);
+          setTimeout(() => {
+            navigate('/billing?intent=upgrade&reason=property_limit');
+          }, 2000);
+          return;
+        }
+        
         if (apiError.response) {
           console.warn('Server responded with:', apiError.response.status, apiError.response.data);
           toast.error(apiError.response.data.error || apiError.response.data.message || 'Server error');
@@ -323,6 +366,55 @@ const AddPropertyPage = () => {
     );
   }
 
+  // Property Limit Warning Banner Component
+  const PropertyLimitBanner = () => {
+    if (!planUsage?.usage?.properties) return null;
+    
+    const { used, max } = planUsage.usage.properties;
+    const isAtLimit = max !== -1 && used >= max;
+    const isNearLimit = max !== -1 && used >= max - 1 && !isAtLimit;
+
+    if (!isAtLimit && !isNearLimit) return null;
+
+    return (
+      <div className={`mb-6 p-4 rounded-lg border backdrop-blur-sm ${
+        isAtLimit 
+          ? 'bg-red-950/30 border-red-800/50' 
+          : 'bg-amber-950/30 border-amber-800/50'
+      }`}>
+        <div className="flex items-start gap-3">
+          <ExclamationTriangleIcon className={`w-6 h-6 flex-shrink-0 mt-0.5 ${
+            isAtLimit ? 'text-red-400' : 'text-amber-400'
+          }`} />
+          <div className="flex-1">
+            <h3 className={`font-semibold mb-1 ${
+              isAtLimit ? 'text-red-300' : 'text-amber-300'
+            }`}>
+              {isAtLimit ? 'Property Limit Reached' : 'Approaching Property Limit'}
+            </h3>
+            <p className="text-sm text-slate-300 mb-3">
+              {isAtLimit 
+                ? `You have ${used}/${max} properties. Upgrade your plan to add more listings.`
+                : `You have ${used}/${max} properties. Consider upgrading for more capacity.`
+              }
+            </p>
+            <Link 
+              to="/billing?intent=upgrade&reason=property_limit"
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors ${
+                isAtLimit
+                  ? 'bg-red-600 hover:bg-red-700'
+                  : 'bg-amber-600 hover:bg-amber-700'
+              }`}
+            >
+              <ArrowUpCircleIcon className="w-4 h-4" />
+              Upgrade Plan
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background decorative elements */}
@@ -351,6 +443,9 @@ const AddPropertyPage = () => {
             Create a stunning property listing in minutes
           </p>
         </div>
+
+        {/* Property Limit Warning Banner */}
+        <PropertyLimitBanner />
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -805,13 +900,22 @@ const AddPropertyPage = () => {
 
             <button
               type="submit"
-              className="flex-1 btn-primary-gradient px-8 py-4 rounded-xl text-lg font-bold shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 flex items-center justify-center gap-3"
-              disabled={loading}
+              className={`flex-1 px-8 py-4 rounded-xl text-lg font-bold shadow-2xl transition-all duration-300 flex items-center justify-center gap-3 ${
+                isAtPropertyLimit()
+                  ? 'bg-slate-700 text-slate-400 cursor-not-allowed border border-slate-600'
+                  : 'btn-primary-gradient hover:shadow-purple-500/25'
+              }`}
+              disabled={loading || isAtPropertyLimit()}
             >
               {loading ? (
                 <>
                   <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
                   <span>Creating Property...</span>
+                </>
+              ) : isAtPropertyLimit() ? (
+                <>
+                  <ExclamationTriangleIcon className="w-6 h-6" />
+                  <span>Limit Reached - Upgrade Required</span>
                 </>
               ) : (
                 <>
