@@ -114,14 +114,6 @@ function App() {
                 } 
               />
               <Route
-                path="/login"
-                element={
-                  <PublicRoute>
-                    <LoginPage />
-                  </PublicRoute>
-                }
-              />
-              <Route
                 path="/register"
                 element={
                   <PublicRoute>

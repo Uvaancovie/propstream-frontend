@@ -92,18 +92,6 @@ const Navbar = () => {
               >
                 Browse Properties
               </Link>
-              <Link
-                to="/login"
-                className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Sign Up
-              </Link>
             </div>
           </div>
         </div>

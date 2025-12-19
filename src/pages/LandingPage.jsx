@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import WaitlistModal from '../components/WaitlistModal';
 import { 
   Rocket, 
   CreditCard, 
@@ -28,7 +29,7 @@ import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 
 // Hero Component moved outside to prevent re-creation on every render
-const Hero = ({ email, isSubmitted, isSubmitting, handleEmailChange, handleSubmit, inputRef }) => {
+const Hero = ({ email, isSubmitted, isSubmitting, handleEmailChange, handleSubmit, inputRef, onGetStartedClick }) => {
   return (
     <section className="relative overflow-hidden py-12 sm:py-16 md:py-24 lg:py-32">
       {/* Cosmic gradient aura */}
@@ -77,13 +78,12 @@ const Hero = ({ email, isSubmitted, isSubmitting, handleEmailChange, handleSubmi
                   Browse Properties
                 </Button>
               </Link>
-              <Link to="/register" className="sm:w-auto">
-                <Button 
-                  className="bg-violet-600 hover:bg-violet-700 w-full sm:w-auto whitespace-nowrap h-12 px-8 text-lg font-semibold"
-                >
-                  Get Started Free
-                </Button>
-              </Link>
+              <Button 
+                onClick={onGetStartedClick}
+                className="bg-violet-600 hover:bg-violet-700 w-full sm:w-auto whitespace-nowrap h-12 px-8 text-lg font-semibold"
+              >
+                Get Started Free
+              </Button>
               <Button 
                 onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
                 variant="outline"
@@ -208,6 +208,7 @@ const LandingPage = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showWaitlistModal, setShowWaitlistModal] = useState(false);
   const inputRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -306,7 +307,7 @@ const LandingPage = () => {
   }, [email]); // Dependencies for useCallback
 
   // Header Component
-  const Header = () => {
+  const Header = ({ onGetStartedClick }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     
     return (
@@ -330,21 +331,12 @@ const LandingPage = () => {
             </nav>
             
             <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
-              <Link to="/login">
-                <Button 
-                  variant="outline"
-                  className="border-violet-600/40 hover:border-violet-600 text-white text-sm lg:text-base px-3 lg:px-4"
-                >
-                  Login
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button 
-                  className="bg-violet-600 hover:bg-violet-700 shadow-[0_0_24px_rgba(124,58,237,.35)] text-sm lg:text-base px-3 lg:px-4"
-                >
-                  Get Started
-                </Button>
-              </Link>
+              <Button 
+                onClick={onGetStartedClick}
+                className="bg-violet-600 hover:bg-violet-700 shadow-[0_0_24px_rgba(124,58,237,.35)] text-sm lg:text-base px-3 lg:px-4"
+              >
+                Get Started
+              </Button>
             </div>
             
             <button 
@@ -363,21 +355,12 @@ const LandingPage = () => {
                 <Link to="/#about" className="text-slate-400 hover:text-white transition-colors py-2">About</Link>
                 <Link to="/#contact" className="text-slate-400 hover:text-white transition-colors py-2">Contact</Link>
                 <div className="flex flex-col space-y-2 pt-3 border-t border-slate-800">
-                  <Link to="/login">
-                    <Button 
-                      variant="outline"
-                      className="border-violet-600/40 hover:border-violet-600 text-white justify-start py-3 w-full"
-                    >
-                      Login
-                    </Button>
-                  </Link>
-                  <Link to="/register">
-                    <Button 
-                      className="bg-violet-600 hover:bg-violet-700 justify-start py-3 w-full"
-                    >
-                      Get Started
-                    </Button>
-                  </Link>
+                  <Button 
+                    onClick={onGetStartedClick}
+                    className="bg-violet-600 hover:bg-violet-700 justify-start py-3 w-full"
+                  >
+                    Get Started
+                  </Button>
                 </div>
               </nav>
             </div>
@@ -696,17 +679,16 @@ const LandingPage = () => {
                       ))}
                     </ul>
                     
-                    <Link to="/register">
-                      <Button 
-                        className={`w-full mt-auto text-sm sm:text-base ${
-                          plan.popular 
-                            ? 'bg-violet-600 hover:bg-violet-700' 
-                            : 'bg-violet-700/40 hover:bg-violet-700/60 border border-violet-700/40'
-                        }`}
-                      >
-                        {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
-                      </Button>
-                    </Link>
+                    <Button 
+                      onClick={() => setShowWaitlistModal(true)}
+                      className={`w-full mt-auto text-sm sm:text-base ${
+                        plan.popular 
+                          ? 'bg-violet-600 hover:bg-violet-700' 
+                          : 'bg-violet-700/40 hover:bg-violet-700/60 border border-violet-700/40'
+                      }`}
+                    >
+                      {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
+                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -845,7 +827,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen w-full bg-[#0A0A0A] text-white starfield overflow-x-hidden" style={{ backgroundColor: '#0A0A0A' }}>
-      <Header />
+      <Header onGetStartedClick={() => setShowWaitlistModal(true)} />
       <Hero 
         email={email}
         isSubmitted={isSubmitted}
@@ -853,6 +835,7 @@ const LandingPage = () => {
         handleEmailChange={handleEmailChange}
         handleSubmit={handleSubmit}
         inputRef={inputRef}
+        onGetStartedClick={() => setShowWaitlistModal(true)}
       />
       <DemoSection />
       <BuiltForSA />
@@ -862,6 +845,7 @@ const LandingPage = () => {
       <FAQ />
       <ContactSection />
       <Footer />
+      <WaitlistModal isOpen={showWaitlistModal} onClose={() => setShowWaitlistModal(false)} />
     </div>
   );
 };
