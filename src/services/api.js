@@ -28,7 +28,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      const currentPath = `${window.location.pathname}${window.location.search || ''}`;
+      window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
     }
     
     // Log detailed error information

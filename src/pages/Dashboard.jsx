@@ -1,20 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link, Navigate } from 'react-router-dom';
-import { propertiesAPI, bookingsAPI, billingAPI } from '../services/api';
-import { seedDemoData, getPropertiesFromStorage } from '../utils/seedData';
+import { billingAPI, authAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Button } from '../components/ui/button';
 import { 
   BuildingOfficeIcon, 
   CalendarDaysIcon, 
-  UserGroupIcon, 
-  CurrencyDollarIcon,
-  ArrowTrendingUpIcon,
+  UserCircleIcon,
   SparklesIcon,
-  ClockIcon,
-  ArrowUpCircleIcon
+  ArrowUpCircleIcon,
+  ChevronRightIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  CreditCardIcon,
+  BookmarkIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
+
+// Stat Card Component
+const StatCard = ({ icon: Icon, label, value }) => (
+  <div className="bg-[#0B0B0E] border border-slate-800 rounded-xl p-4">
+    <div className="flex items-center gap-3">
+      <div className="p-2 rounded-lg bg-violet-900/30 border border-violet-800/50">
+        <Icon className="w-5 h-5 text-violet-400" />
+      </div>
+      <div>
+        <p className="text-2xl font-bold text-white">{value}</p>
+        <p className="text-xs text-slate-500">{label}</p>
+      </div>
+    </div>
+  </div>
+);
+
+// Quick Action Card Component
+const QuickActionCard = ({ href, icon: Icon, title, desc }) => (
+  <Link 
+    to={href}
+    className="group flex items-center gap-3 p-4 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-violet-700/50 hover:bg-slate-900 transition-all"
+  >
+    <div className="p-2 rounded-lg bg-violet-900/20 border border-violet-800/30 group-hover:bg-violet-900/30 transition-colors">
+      <Icon className="w-5 h-5 text-violet-400" />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="font-medium text-white text-sm">{title}</p>
+      <p className="text-xs text-slate-500 truncate">{desc}</p>
+    </div>
+    <ChevronRightIcon className="w-4 h-4 text-slate-600 group-hover:text-violet-400 transition-colors" />
+  </Link>
+);
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -23,29 +57,28 @@ const Dashboard = () => {
   if (user && (user.role === 'owner' || user.role === 'admin')) {
     return <Navigate to="/admin" replace />;
   }
+
   const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
-    properties: [],
-    bookings: [],
-    totalProperties: 0,
-    activeBookings: 0,
-    totalGuests: 0,
-    monthlyRevenue: 0,
-    totalRevenue: 0
-  });
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  const [planUsage, setPlanUsage] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [startingTrial, setStartingTrial] = useState(false);
 
   useEffect(() => {
-    // Only fetch dashboard data when user is loaded
     if (user) {
-      fetchSubscription();
-      fetchPlanUsage();
-      fetchDashboardData();
+      fetchAllData();
     }
   }, [user]);
 
-  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
-  const [startingTrial, setStartingTrial] = useState(false);
-  const [planUsage, setPlanUsage] = useState(null);
+  const fetchAllData = async () => {
+    setLoading(true);
+    await Promise.all([
+      fetchSubscription(),
+      fetchPlanUsage(),
+      fetchStats()
+    ]);
+    setLoading(false);
+  };
 
   const fetchSubscription = async () => {
     try {
@@ -67,716 +100,359 @@ const Dashboard = () => {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authAPI.getStats();
+      setStats(res.stats || null);
+    } catch (err) {
+      console.warn('Could not fetch stats', err);
+      setStats(null);
+    }
+  };
+
   const handleStartTrial = async () => {
-    if (!window.confirm('Start a 14-day free trial for your organization?')) return;
+    if (!window.confirm('Start a 14-day free trial?')) return;
     setStartingTrial(true);
     try {
       const res = await billingAPI.startTrial({ planId: 'starter' });
-      if (res && res.subscription) {
+      if (res?.subscription) {
         setSubscriptionInfo(res.subscription);
-        alert('Trial started — you have 14 days free.');
-      } else {
-        alert('Trial started.');
+        alert('Trial started — you have 14 days free!');
       }
     } catch (err) {
-      console.error('start trial error', err);
       alert('Unable to start trial: ' + (err.response?.data?.message || err.message));
     } finally {
       setStartingTrial(false);
     }
   };
 
-  // Welcome section component based on user role
-  const WelcomeSection = () => {
-    if (!user) return null;
+  // Helpers
+  const getSubscriptionStatus = () => {
+    if (!subscriptionInfo) return { label: 'Free Plan', color: 'slate', isTrial: false, isActive: false };
     
-    return (
-      <div className="bg-[#0B0B0E] p-6 rounded-lg shadow-lg border border-slate-800 mb-6">
-        <h2 className="text-2xl font-bold mb-2 text-white">Welcome, {user.name || user.email}!</h2>
-        <p className="text-slate-400 mb-4">
-          {user.role === 'realtor' 
-            ? 'Manage your properties, bookings, and clients from your dashboard.' 
-            : 'Browse properties, manage your bookings, and messages from your dashboard.'}
-        </p>
-        <div className="flex flex-wrap gap-3">
-          {user.role === 'realtor' && (
-            <>
-              <Link to="/properties/add">
-                <Button className="bg-violet-600 hover:bg-violet-700 text-white">
-                  Add New Property
-                </Button>
-              </Link>
-              <Link to="/calendar">
-                <Button className="bg-slate-700 hover:bg-slate-600 text-white">
-                  View Calendar
-                </Button>
-              </Link>
-              {/* Trial CTA - only show when no subscription or trial expired */}
-              {(!subscriptionInfo || subscriptionInfo.status === 'inactive' || subscriptionInfo.status === 'trial_expired') && (
-                <Button onClick={handleStartTrial} disabled={startingTrial} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                  {startingTrial ? 'Starting...' : 'Start 14-day Free Trial'}
-                </Button>
-              )}
-            </>
-          )}
-          {user.role === 'client' && (
-            <>
-              <Link to="/browse">
-                <Button className="bg-violet-600 hover:bg-violet-700 text-white">
-                  Browse Properties
-                </Button>
-              </Link>
-              <Link to="/bookings">
-                <Button className="bg-slate-700 hover:bg-slate-600 text-white">
-                  My Bookings
-                </Button>
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-    );
+    const status = subscriptionInfo.status;
+    if (status === 'trialing' || status === 'trial') {
+      const daysLeft = subscriptionInfo.trialDaysRemaining || 
+        Math.max(0, Math.ceil((new Date(subscriptionInfo.trialEnd) - new Date()) / (1000 * 60 * 60 * 24)));
+      return { label: `Trial (${daysLeft} days left)`, color: 'amber', isTrial: true, isActive: true, daysLeft };
+    }
+    if (status === 'active') {
+      return { label: subscriptionInfo.planLabel || 'Active', color: 'emerald', isTrial: false, isActive: true };
+    }
+    if (status === 'trial_expired') {
+      return { label: 'Trial Expired', color: 'red', isTrial: false, isActive: false };
+    }
+    return { label: 'Free Plan', color: 'slate', isTrial: false, isActive: false };
   };
 
-  // Plan Usage section for realtors
-  const PlanUsageSection = () => {
-    if (!user || user.role !== 'realtor' || !planUsage) return null;
+  const subStatus = getSubscriptionStatus();
 
-    const { plan, usage } = planUsage;
-    const isUnlimited = (max) => max === -1;
-    
-    const getPercentage = (used, max) => {
-      if (isUnlimited(max)) return 0;
-      return Math.min(100, Math.round((used / max) * 100));
-    };
+  // Usage data
+  const propertiesUsed = planUsage?.usage?.properties?.used || 0;
+  const propertiesMax = planUsage?.usage?.properties?.max || 2;
+  const aiUsed = planUsage?.usage?.aiGenerations?.used || 0;
+  const aiMax = planUsage?.usage?.aiGenerations?.max || 8;
+  const planLabel = planUsage?.plan?.label || 'Free';
 
-    const isAtLimit = (used, max) => {
-      if (isUnlimited(max)) return false;
-      return used >= max;
-    };
+  const propertiesPercent = propertiesMax === -1 ? 10 : Math.min(100, (propertiesUsed / propertiesMax) * 100);
+  const aiPercent = aiMax === -1 ? 10 : Math.min(100, (aiUsed / aiMax) * 100);
 
-    const getProgressColor = (used, max) => {
-      if (isUnlimited(max)) return 'bg-violet-500';
-      const percentage = getPercentage(used, max);
-      if (percentage >= 100) return 'bg-red-500';
-      if (percentage >= 80) return 'bg-amber-500';
-      return 'bg-violet-500';
-    };
-
-    const usageItems = [
-      {
-        label: 'Properties Listed',
-        used: usage?.properties?.used || 0,
-        max: usage?.properties?.max || 2,
-        icon: BuildingOfficeIcon,
-        description: 'Property listings you can create'
-      },
-      {
-        label: 'AI Generations',
-        used: usage?.aiGenerations?.used || 0,
-        max: usage?.aiGenerations?.max || 8,
-        icon: SparklesIcon,
-        description: 'AI-powered listing descriptions'
-      }
-    ];
-
-    return (
-      <div className="bg-[#0B0B0E] p-6 rounded-lg shadow-lg border border-slate-800 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-white">Plan Usage</h2>
-            <p className="text-sm text-slate-400">
-              Current Plan: <span className="text-violet-400 font-medium">{plan?.label || 'Free'}</span>
-            </p>
-          </div>
-          {plan?.id !== 'agency' && (
-            <Link to="/billing">
-              <Button className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white flex items-center gap-2">
-                <ArrowUpCircleIcon className="w-4 h-4" />
-                Upgrade Plan
-              </Button>
-            </Link>
-          )}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {usageItems.map((item) => {
-            const Icon = item.icon;
-            const percentage = getPercentage(item.used, item.max);
-            const atLimit = isAtLimit(item.used, item.max);
-            const unlimited = isUnlimited(item.max);
-            
-            return (
-              <div 
-                key={item.label} 
-                className={`p-4 rounded-lg border ${
-                  atLimit 
-                    ? 'bg-red-950/20 border-red-800/50' 
-                    : 'bg-slate-900/50 border-slate-800'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Icon className={`w-5 h-5 ${atLimit ? 'text-red-400' : 'text-violet-400'}`} />
-                    <span className="font-medium text-white">{item.label}</span>
-                  </div>
-                  <span className={`text-sm font-semibold ${
-                    atLimit ? 'text-red-400' : 'text-slate-300'
-                  }`}>
-                    {unlimited 
-                      ? `${item.used} / ∞`
-                      : `${item.used} / ${item.max}`
-                    }
-                  </span>
-                </div>
-                
-                {/* Progress bar */}
-                <div className="w-full bg-slate-800 rounded-full h-2 mb-2">
-                  <div 
-                    className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(item.used, item.max)}`}
-                    style={{ width: unlimited ? '10%' : `${percentage}%` }}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-slate-500">{item.description}</p>
-                  {atLimit && (
-                    <Link 
-                      to="/billing" 
-                      className="text-xs text-red-400 hover:text-red-300 font-medium flex items-center gap-1"
-                    >
-                      <ArrowUpCircleIcon className="w-3 h-3" />
-                      Upgrade
-                    </Link>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        
-        {/* Upgrade prompt when any limit is reached */}
-        {(isAtLimit(usage?.properties?.used || 0, usage?.properties?.max || 2) || 
-          isAtLimit(usage?.aiGenerations?.used || 0, usage?.aiGenerations?.max || 8)) && (
-          <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-violet-900/30 to-purple-900/30 border border-violet-800/50">
-            <div className="flex items-start gap-3">
-              <ArrowUpCircleIcon className="w-6 h-6 text-violet-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-white mb-1">You've reached your limit</h3>
-                <p className="text-sm text-slate-400 mb-3">
-                  Upgrade to unlock more properties and AI generations. Growth plan includes 10 properties and 15 AI generations.
-                </p>
-                <Link to="/billing">
-                  <Button className="bg-violet-600 hover:bg-violet-700 text-white text-sm">
-                    View Plans & Upgrade
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Debug logging for loading states
-  useEffect(() => {
-    console.log('📊 Dashboard state:', { authLoading, loading, user: !!user });
-    
-    // For testing - if no user is loaded but we're not in auth loading, try to get user from localStorage
-    if (!user && !authLoading) {
-      const storedUser = localStorage.getItem('user');
-      console.log('🔍 Checking localStorage for user:', storedUser);
-      if (storedUser) {
-        try {
-          const userData = JSON.parse(storedUser);
-          console.log('👤 Found stored user data:', userData);
-        } catch (e) {
-          console.error('❌ Error parsing stored user:', e);
-        }
-      }
-    }
-  }, [authLoading, loading, user]);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      console.log('🔍 Fetching dashboard data for user:', user);
-      
-      // Seed demo data first
-      seedDemoData();
-      
-      let properties = [];
-      
-      // Try to get properties from API first
-      try {
-        let propertiesData;
-        
-        if (user?.role === 'realtor') {
-          // For realtors, fetch their own properties
-          propertiesData = await propertiesAPI.getAll();
-        } else {
-          // For clients, fetch public properties
-          propertiesData = await propertiesAPI.getAllPublic();
-        }
-        
-        properties = propertiesData.properties || [];
-        console.log('✅ Properties from API:', properties.length);
-      } catch (apiError) {
-        console.warn('⚠️ API failed, using localStorage:', apiError);
-        // Fallback to localStorage
-        properties = getPropertiesFromStorage();
-        console.log('💾 Properties from localStorage:', properties.length);
-      }
-      
-      // Get bookings
-      let bookings = [];
-      try {
-        // Try to get bookings from API first
-        const bookingsData = await bookingsAPI.getAll();
-        bookings = bookingsData.bookings || [];
-        console.log('✅ Bookings from API:', bookings.length);
-      } catch (apiError) {
-        console.warn('⚠️ Bookings API failed, using localStorage:', apiError);
-        // Fallback to localStorage
-        const storedBookings = JSON.parse(localStorage.getItem('propstream_bookings') || '[]');
-        bookings = storedBookings;
-      }
-      
-      // Filter data based on user role
-      let userBookings = [];
-      let userProperties = [];
-      
-      if (user?.role === 'realtor') {
-        // Realtors see their own properties and bookings for their properties
-        userProperties = properties.filter(p => 
-          p.realtor_email === user.email || 
-          p.realtor_id === user.id
-        );
-        userBookings = bookings.filter(b => 
-          b.realtor_email === user.email ||
-          userProperties.some(p => p.id === b.property_id || p._id === b.property_id)
-        );
-      } else {
-        // Clients see all properties but only their own bookings
-        userProperties = properties;
-        userBookings = bookings.filter(b => 
-          b.guest_email === user.email || b.user_id === user.id
-        );
-      }
-      
-      console.log('📋 User properties:', userProperties.length);
-      console.log('📅 User bookings:', userBookings.length);
-      
-      // Calculate stats based on user role
-      const totalProperties = user?.role === 'realtor' ? userProperties.length : properties.length;
-      const activeBookings = userBookings.filter(b => b.status !== 'cancelled').length;
-      const totalGuests = userBookings.reduce((sum, booking) => {
-        const guests = booking.guests || booking.guest_count || 0;
-        return sum + parseInt(guests);
-      }, 0);
-      
-      // Calculate revenue with different possible field names
-      const totalRevenue = userBookings.reduce((sum, booking) => {
-        const amount = booking.total_amount || booking.totalAmount || booking.totalPrice || 0;
-        return sum + parseFloat(amount);
-      }, 0);
-      
-      // Calculate monthly revenue - bookings from current month
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      const monthlyRevenue = userBookings.reduce((sum, booking) => {
-        const bookingDate = new Date(booking.createdAt || booking.created_at);
-        if (bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear) {
-          const amount = booking.total_amount || booking.totalAmount || booking.totalPrice || 0;
-          return sum + parseFloat(amount);
-        }
-        return sum;
-      }, 0);
-      
-      setDashboardData({
-        properties: userProperties,
-        bookings: userBookings,
-        totalProperties,
-        activeBookings,
-        totalGuests,
-        monthlyRevenue,
-        totalRevenue: monthlyRevenue
-      });
-    } catch (error) {
-      console.error('❌ Dashboard data fetch error:', error);
-      // Set default data to prevent blank page
-      setDashboardData({
-        properties: [],
-        bookings: [],
-        totalProperties: 0,
-        activeBookings: 0,
-        totalGuests: 0,
-        monthlyRevenue: 0,
-        totalRevenue: 0
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const stats = user?.role === 'realtor' ? [
-    {
-      name: 'My Properties',
-      value: dashboardData.totalProperties.toString(),
-      icon: BuildingOfficeIcon,
-      color: 'bg-violet-900/30 border-violet-800 text-violet-400',
-      description: 'Properties you\'ve listed'
-    },
-    {
-      name: 'Active Bookings',
-      value: dashboardData.activeBookings.toString(),
-      icon: CalendarDaysIcon,
-      color: 'bg-slate-800 border-slate-700 text-slate-300',
-      description: 'Current and upcoming reservations'
-    },
-    {
-      name: 'Total Revenue',
-      value: `R${dashboardData.totalRevenue.toLocaleString()}`,
-      icon: CurrencyDollarIcon,
-      color: 'bg-violet-900/30 border-violet-800 text-violet-400',
-      description: 'Total earnings this month'
-    },
-    {
-      name: 'Total Clients',
-      value: dashboardData.totalGuests.toString(),
-      icon: UserGroupIcon,
-      color: 'bg-slate-800 border-slate-700 text-slate-300',
-      description: 'Unique clients served'
-    }
-  ] : [
-    {
-      name: 'Available Properties',
-      value: dashboardData.totalProperties.toString(),
-      icon: BuildingOfficeIcon,
-      color: 'bg-violet-900/30 border-violet-800 text-violet-400',
-      description: 'Properties ready to book'
-    },
-    {
-      name: 'My Bookings',
-      value: dashboardData.activeBookings.toString(),
-      icon: CalendarDaysIcon,
-      color: 'bg-slate-800 border-slate-700 text-slate-300',
-      description: 'Your current reservations'
-    },
-    {
-      name: 'Favorite Properties',
-      value: '0',
-      icon: CurrencyDollarIcon,
-      color: 'bg-violet-900/30 border-violet-800 text-violet-400',
-      description: 'Properties you\'ve saved'
-    },
-    {
-      name: 'Reviews Given',
-      value: '0',
-      icon: UserGroupIcon,
-      color: 'bg-slate-800 border-slate-700 text-slate-300',
-      description: 'Reviews you\'ve written'
-    }
-  ];
-
-  const quickActions = user?.role === 'realtor' ? [
-    {
-      title: 'Add New Property',
-      description: 'List a new rental property',
-      href: '/properties/add',
-      icon: BuildingOfficeIcon,
-      color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
-    },
-    {
-      title: 'View Calendar',
-      description: 'Check your booking calendar',
-      href: '/calendar',
-      icon: CalendarDaysIcon,
-      color: 'bg-violet-900/20 text-violet-400 hover:bg-violet-900/30 border border-violet-800/50'
-    },
-    {
-      title: 'Manage Properties',
-      description: 'Edit your property listings',
-      href: '/properties',
-      icon: ArrowTrendingUpIcon,
-      color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
-    }
-    ,
-    {
-      title: 'Newsletter',
-      description: 'View subscribers and send newsletters',
-      href: '/realtor/newsletter',
-      icon: SparklesIcon,
-      color: 'bg-violet-900/20 text-violet-400 hover:bg-violet-900/30 border border-violet-800/50'
-    }
-  ] : [
-    {
-      title: 'Browse Properties',
-      description: 'Find your perfect stay',
-  href: '/browse',
-      icon: BuildingOfficeIcon,
-      color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
-    },
-    {
-      title: 'My Bookings',
-      description: 'View your reservations',
-      href: '/bookings',
-      icon: CalendarDaysIcon,
-      color: 'bg-violet-900/20 text-violet-400 hover:bg-violet-900/30 border border-violet-800/50'
-    },
-    {
-      title: 'Account Settings',
-      description: 'Update your profile',
-      href: '/billing',
-      icon: ArrowTrendingUpIcon,
-      color: 'bg-slate-800/80 text-violet-400 hover:bg-slate-800 border border-slate-700'
-    }
-  ];
-
-  const recentActivity = user?.role === 'realtor' ? [
-    {
-      type: 'info',
-      message: 'Welcome to Nova Prop! Start by adding your first property.',
-      time: 'Just now',
-      icon: BuildingOfficeIcon
-    }
-  ] : [
-    {
-      type: 'info',
-      message: 'Welcome to Nova Prop! Start by browsing amazing properties.',
-      time: 'Just now',
-      icon: BuildingOfficeIcon
-    }
-  ];
-
-  const gettingStartedSteps = user?.role === 'realtor' ? [
-    {
-      number: 1,
-      title: 'Add Your First Property',
-      description: 'Create a property listing with photos and details.',
-      completed: false
-    },
-    {
-      number: 2,
-      title: 'Set Up Your Calendar',
-      description: 'Configure availability and booking settings.',
-      completed: false
-    },
-    {
-      number: 3,
-      title: 'Manage Bookings',
-      description: 'Accept reservations and communicate with clients.',
-      completed: false
-    }
-  ] : [
-    {
-      number: 1,
-      title: 'Browse Properties',
-      description: 'Explore available properties in your area.',
-      completed: false
-    },
-    {
-      number: 2,
-      title: 'Make Your First Booking',
-      description: 'Reserve a property for your stay.',
-      completed: false
-    },
-    {
-      number: 3,
-      title: 'Leave a Review',
-      description: 'Share your experience with other travelers.',
-      completed: false
-    }
-  ];
+  const isRealtor = user?.role === 'realtor';
 
   if (authLoading || loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinner />
-        </div>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <LoadingSpinner />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Loading Dashboard...</h2>
-          <p className="text-slate-400">Please wait while we load your data.</p>
-          <div className="mt-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
-            <p className="text-slate-300 text-sm">
-              Debug: authLoading={authLoading.toString()}, loading={loading.toString()}, user={user ? 'exists' : 'null'}
-            </p>
-            <button 
-              onClick={() => {
-                // Test button to manually set user for debugging
-                const testUser = { id: 1, name: 'Test User', email: 'test@example.com', role: 'realtor' };
-                localStorage.setItem('user', JSON.stringify(testUser));
-                window.location.reload();
-              }}
-              className="mt-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-md transition-colors duration-200"
-            >
-              Set Test User (Debug)
-            </button>
-          </div>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 py-12 text-center">
+        <h2 className="text-2xl font-bold text-white mb-2">Loading...</h2>
+        <p className="text-slate-400">Please wait while we load your dashboard.</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Welcome Section */}
-      <WelcomeSection />
-      
-      {/* Plan Usage Section (Realtors only) */}
-      <PlanUsageSection />
-      
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.name} className="bg-[#0B0B0E] border border-slate-800 p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
-              <div className="flex items-center">
-                <div className={`flex-shrink-0 p-3 rounded-lg border ${stat.color}`}>
-                  <Icon className="w-6 h-6" />
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Top Section: Profile + Subscription */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        
+        {/* Profile Card */}
+        <div className="lg:col-span-2 bg-gradient-to-br from-[#0E0E14] to-[#0B0B0E] border border-slate-800 rounded-2xl p-6">
+          <div className="flex items-start gap-5">
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              {user.profileImage ? (
+                <img 
+                  src={user.profileImage} 
+                  alt={user.name} 
+                  className="w-20 h-20 rounded-2xl object-cover border-2 border-violet-600/50"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center">
+                  <span className="text-3xl font-bold text-white">
+                    {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                  </span>
                 </div>
-                <div className="ml-4 flex-1">
-                  <p className="text-sm font-medium text-slate-400">{stat.name}</p>
-                  <p className="text-2xl font-bold text-white">{stat.value}</p>
-                </div>
+              )}
+            </div>
+            
+            {/* User Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-2xl font-bold text-white truncate">
+                  {user.name || 'Welcome!'}
+                </h1>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
+                  ${isRealtor ? 'bg-violet-900/50 text-violet-300 border border-violet-700' : 'bg-slate-800 text-slate-300 border border-slate-700'}`}>
+                  {user.role}
+                </span>
               </div>
-              <p className="mt-3 text-sm text-slate-500">{stat.description}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Quick Actions */}
-        <div className="lg:col-span-2">
-          <div className="bg-[#0B0B0E] border border-slate-800 p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {quickActions.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <Link
-                    key={action.title}
-                    to={action.href}
-                    className={`p-4 rounded-lg transition-colors duration-200 ${action.color}`}
-                  >
-                    <Icon className="w-8 h-8 mb-3" />
-                    <h3 className="font-semibold mb-1 text-white">{action.title}</h3>
-                    <p className="text-sm text-slate-400">{action.description}</p>
+              <p className="text-slate-400 text-sm mb-3 truncate">{user.email}</p>
+              
+              <div className="flex flex-wrap gap-2">
+                <Link to="/profile">
+                  <Button variant="outline" size="sm" className="text-slate-300 border-slate-700 hover:bg-slate-800">
+                    <UserCircleIcon className="w-4 h-4 mr-1.5" />
+                    Edit Profile
+                  </Button>
+                </Link>
+                {isRealtor && (
+                  <Link to="/properties/add">
+                    <Button size="sm" className="bg-violet-600 hover:bg-violet-700 text-white">
+                      <BuildingOfficeIcon className="w-4 h-4 mr-1.5" />
+                      Add Property
+                    </Button>
                   </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Getting Started Guide */}
-          <div className="bg-[#0B0B0E] border border-slate-800 p-6 rounded-lg shadow-md mt-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Getting Started</h2>
-            <div className="space-y-4">
-              {gettingStartedSteps.map((step) => (
-                <div key={step.number} className="flex items-start space-x-3">
-                  <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-                    step.completed 
-                      ? 'bg-violet-900/50 border border-violet-800' 
-                      : step.number === 1 
-                        ? 'bg-violet-900/30 border border-violet-800' 
-                        : 'bg-slate-800 border border-slate-700'
-                  }`}>
-                    <span className={`text-xs font-semibold ${
-                      step.completed 
-                        ? 'text-violet-300' 
-                        : step.number === 1 
-                          ? 'text-violet-400' 
-                          : 'text-slate-400'
-                    }`}>
-                      {step.number}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className={`font-medium ${
-                      step.completed 
-                        ? 'text-violet-300' 
-                        : step.number === 1 
-                          ? 'text-white' 
-                          : 'text-slate-400'
-                    }`}>
-                      {step.title}
-                    </h3>
-                    <p className={`text-sm ${
-                      step.completed 
-                        ? 'text-violet-400' 
-                        : step.number === 1 
-                          ? 'text-slate-400' 
-                          : 'text-slate-500'
-                    }`}>
-                      {step.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div>
-          <div className="bg-[#0B0B0E] border border-slate-800 p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-white mb-6">Recent Activity</h2>
-            <div className="space-y-4">
-              {recentActivity.map((activity, index) => {
-                const Icon = activity.icon;
-                return (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0">
-                      <Icon className="w-5 h-5 text-violet-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-300">{activity.message}</p>
-                      <div className="flex items-center mt-1">
-                        <ClockIcon className="w-3 h-3 text-slate-500 mr-1" />
-                        <p className="text-xs text-slate-500">{activity.time}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        {/* Subscription Card */}
+        <div className="bg-gradient-to-br from-[#0E0E14] to-[#0B0B0E] border border-slate-800 rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wide">Subscription</h2>
+            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold
+              ${subStatus.color === 'emerald' ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700' : ''}
+              ${subStatus.color === 'amber' ? 'bg-amber-900/50 text-amber-300 border border-amber-700' : ''}
+              ${subStatus.color === 'red' ? 'bg-red-900/50 text-red-300 border border-red-700' : ''}
+              ${subStatus.color === 'slate' ? 'bg-slate-800 text-slate-300 border border-slate-700' : ''}
+            `}>
+              {subStatus.label}
+            </span>
+          </div>
+          
+          <div className="mb-4">
+            <p className="text-2xl font-bold text-white">{planLabel}</p>
+            <p className="text-sm text-slate-500">Current plan</p>
           </div>
 
-          {/* API Status */}
-          <div className="bg-[#0B0B0E] border border-slate-800 p-6 rounded-lg shadow-md mt-6">
-            <h2 className="text-xl font-semibold text-white mb-4">System Status</h2>
+          {/* Show trial CTA or upgrade */}
+          {!subStatus.isActive && isRealtor ? (
+            <Button 
+              onClick={handleStartTrial} 
+              disabled={startingTrial}
+              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
+            >
+              {startingTrial ? 'Starting...' : 'Start 14-Day Free Trial'}
+            </Button>
+          ) : subStatus.isTrial || planLabel === 'Free' ? (
+            <Link to="/billing" className="block">
+              <Button className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white">
+                <ArrowUpCircleIcon className="w-4 h-4 mr-1.5" />
+                Upgrade Plan
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/billing" className="block">
+              <Button variant="outline" className="w-full text-slate-300 border-slate-700 hover:bg-slate-800">
+                <CreditCardIcon className="w-4 h-4 mr-1.5" />
+                Manage Billing
+              </Button>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* Usage Section (Realtors) */}
+      {isRealtor && (
+        <div className="bg-[#0B0B0E] border border-slate-800 rounded-2xl p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-white">Usage Overview</h2>
+            <span className="text-sm text-slate-500">{planLabel} Plan</span>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Properties Usage */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-400">API Connection</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-900/30 border border-violet-800 text-violet-300">
-                  Connected
+                <div className="flex items-center gap-2">
+                  <BuildingOfficeIcon className="w-5 h-5 text-violet-400" />
+                  <span className="font-medium text-white">Properties Listed</span>
+                </div>
+                <span className="text-sm font-semibold text-slate-300">
+                  {propertiesUsed} / {propertiesMax === -1 ? '∞' : propertiesMax}
                 </span>
               </div>
+              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all ${propertiesPercent >= 100 ? 'bg-red-500' : propertiesPercent >= 80 ? 'bg-amber-500' : 'bg-violet-500'}`}
+                  style={{ width: `${propertiesPercent}%` }}
+                />
+              </div>
+              {propertiesPercent >= 100 && (
+                <p className="text-xs text-red-400 flex items-center gap-1">
+                  <ExclamationTriangleIcon className="w-3 h-3" />
+                  Limit reached — upgrade to add more
+                </p>
+              )}
+            </div>
+
+            {/* AI Usage */}
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-400">Database</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-900/30 border border-violet-800 text-violet-300">
-                  Online
+                <div className="flex items-center gap-2">
+                  <SparklesIcon className="w-5 h-5 text-violet-400" />
+                  <span className="font-medium text-white">AI Generations</span>
+                </div>
+                <span className="text-sm font-semibold text-slate-300">
+                  {aiUsed} / {aiMax === -1 ? '∞' : aiMax}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-400">Calendar Sync</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 border border-slate-700 text-slate-300">
-                  Setup Required
-                </span>
+              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all ${aiPercent >= 100 ? 'bg-red-500' : aiPercent >= 80 ? 'bg-amber-500' : 'bg-violet-500'}`}
+                  style={{ width: `${aiPercent}%` }}
+                />
               </div>
+              {aiPercent >= 100 && (
+                <p className="text-xs text-red-400 flex items-center gap-1">
+                  <ExclamationTriangleIcon className="w-3 h-3" />
+                  Limit reached — upgrade for more
+                </p>
+              )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {isRealtor ? (
+          <>
+            <StatCard 
+              icon={BuildingOfficeIcon} 
+              label="Properties" 
+              value={stats?.properties || propertiesUsed} 
+            />
+            <StatCard 
+              icon={CalendarDaysIcon} 
+              label="Bookings" 
+              value={stats?.bookings || 0} 
+            />
+            <StatCard 
+              icon={ChatBubbleLeftRightIcon} 
+              label="Messages" 
+              value={stats?.messages || 0} 
+            />
+            <StatCard 
+              icon={SparklesIcon} 
+              label="AI Used" 
+              value={aiUsed} 
+            />
+          </>
+        ) : (
+          <>
+            <StatCard 
+              icon={CalendarDaysIcon} 
+              label="My Bookings" 
+              value={stats?.bookings || 0} 
+            />
+            <StatCard 
+              icon={BookmarkIcon} 
+              label="Saved" 
+              value={0} 
+            />
+            <StatCard 
+              icon={ChatBubbleLeftRightIcon} 
+              label="Messages" 
+              value={stats?.messages || 0} 
+            />
+            <StatCard 
+              icon={CheckCircleIcon} 
+              label="Reviews" 
+              value={0} 
+            />
+          </>
+        )}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-[#0B0B0E] border border-slate-800 rounded-2xl p-6">
+        <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {isRealtor ? (
+            <>
+              <QuickActionCard 
+                href="/properties" 
+                icon={BuildingOfficeIcon} 
+                title="My Properties" 
+                desc="View & manage listings"
+              />
+              <QuickActionCard 
+                href="/ai-studio" 
+                icon={SparklesIcon} 
+                title="AI Studio" 
+                desc="Generate listing content"
+              />
+              <QuickActionCard 
+                href="/calendar" 
+                icon={CalendarDaysIcon} 
+                title="Calendar" 
+                desc="Manage availability"
+              />
+              <QuickActionCard 
+                href="/messages" 
+                icon={ChatBubbleLeftRightIcon} 
+                title="Messages" 
+                desc="Client communications"
+              />
+            </>
+          ) : (
+            <>
+              <QuickActionCard 
+                href="/browse" 
+                icon={BuildingOfficeIcon} 
+                title="Browse Properties" 
+                desc="Find your next stay"
+              />
+              <QuickActionCard 
+                href="/bookings" 
+                icon={CalendarDaysIcon} 
+                title="My Bookings" 
+                desc="View reservations"
+              />
+              <QuickActionCard 
+                href="/messages" 
+                icon={ChatBubbleLeftRightIcon} 
+                title="Messages" 
+                desc="Chat with hosts"
+              />
+              <QuickActionCard 
+                href="/profile" 
+                icon={UserCircleIcon} 
+                title="Profile" 
+                desc="Update your info"
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

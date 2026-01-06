@@ -331,6 +331,14 @@ const LandingPage = () => {
             </nav>
             
             <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
+              <Link to="/login">
+                <Button
+                  variant="outline"
+                  className="border-slate-700 text-slate-200 hover:bg-slate-800 text-sm lg:text-base px-3 lg:px-4"
+                >
+                  Sign In
+                </Button>
+              </Link>
               <Button 
                 onClick={onGetStartedClick}
                 className="bg-violet-600 hover:bg-violet-700 shadow-[0_0_24px_rgba(124,58,237,.35)] text-sm lg:text-base px-3 lg:px-4"
@@ -355,6 +363,14 @@ const LandingPage = () => {
                 <Link to="/#about" className="text-slate-400 hover:text-white transition-colors py-2">About</Link>
                 <Link to="/#contact" className="text-slate-400 hover:text-white transition-colors py-2">Contact</Link>
                 <div className="flex flex-col space-y-2 pt-3 border-t border-slate-800">
+                  <Link to="/login" className="w-full">
+                    <Button
+                      variant="outline"
+                      className="border-slate-700 text-slate-200 hover:bg-slate-800 justify-start py-3 w-full"
+                    >
+                      Sign In
+                    </Button>
+                  </Link>
                   <Button 
                     onClick={onGetStartedClick}
                     className="bg-violet-600 hover:bg-violet-700 justify-start py-3 w-full"
@@ -680,7 +696,7 @@ const LandingPage = () => {
                     </ul>
                     
                     <Button 
-                      onClick={() => setShowWaitlistModal(true)}
+                      onClick={() => navigate('/register')}
                       className={`w-full mt-auto text-sm sm:text-base ${
                         plan.popular 
                           ? 'bg-violet-600 hover:bg-violet-700' 
@@ -827,7 +843,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen w-full bg-[#0A0A0A] text-white starfield overflow-x-hidden" style={{ backgroundColor: '#0A0A0A' }}>
-      <Header onGetStartedClick={() => setShowWaitlistModal(true)} />
+      <Header onGetStartedClick={() => navigate('/register')} />
       <Hero 
         email={email}
         isSubmitted={isSubmitted}
@@ -835,7 +851,7 @@ const LandingPage = () => {
         handleEmailChange={handleEmailChange}
         handleSubmit={handleSubmit}
         inputRef={inputRef}
-        onGetStartedClick={() => setShowWaitlistModal(true)}
+        onGetStartedClick={() => navigate('/register')}
       />
       <DemoSection />
       <BuiltForSA />

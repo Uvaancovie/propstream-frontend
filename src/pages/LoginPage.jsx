@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const LoginPage = () => {
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -51,7 +52,8 @@ const LoginPage = () => {
     try {
       const result = await login(formData);
       if (result.success) {
-        navigate('/dashboard');
+        const redirectTo = searchParams.get('redirect');
+        navigate(redirectTo || '/dashboard');
       } else {
         setErrors({ general: result.error });
       }
@@ -167,32 +169,6 @@ const LoginPage = () => {
               </button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-700" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#0B0B0E] text-slate-400">Quick Demo Access</span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData({
-                    email: 'demo@propnova.com',
-                    password: 'demo123'
-                  });
-                }}
-                className="w-full border border-violet-600/50 bg-violet-900/20 hover:bg-violet-900/30 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
-              >
-                Fill Demo Credentials
-              </button>
-            </div>
-          </div>
 
           <div className="mt-6 text-center text-sm text-slate-400">
             <p>
