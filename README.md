@@ -61,6 +61,10 @@ A modern real estate platform built with React and Node.js.
 
 For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
+## Documentation
+
+- Developer handbook (how the codebase works): [docs/handbook/README.md](./docs/handbook/README.md)
+
 Quick deployment:
 
 ```bash
